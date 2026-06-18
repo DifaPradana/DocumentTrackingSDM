@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('document_routes', function (Blueprint $table) {
+            $table->id('document_route_id');
+            $table->foreignId('document_id')->constrained('documents', 'document_id');
+            $table->foreignId('departement_id')->constrained('departements', 'departement_id');
+            $table->integer('urutan');
+            $table->integer('revisi')->nullable(); //ini isinya urutan berapa yang direvisi
+            $table->enum('status', ['pending', 'waiting', 'hilang', 'revisi', 'approved'])->default('pending');
+            $table->string('note')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('document_routes');
+    }
+};
