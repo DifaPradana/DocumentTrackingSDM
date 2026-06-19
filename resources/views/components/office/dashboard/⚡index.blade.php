@@ -19,17 +19,17 @@ new class extends Component
         return [
             'totalUnprocessed' => Document::query()
                 ->whereHas('creator')
-                ->where('current_status', 'belum diproses')
+                ->where('current_status', 'pending')
                 ->where('created_at', '>=', now()->subMonth())
                 ->count(),
             'totalProcessed' => Document::query()
                 ->whereHas('creator')
-                ->where('current_status', 'diproses')
+                ->where('current_status', 'waiting')
                 ->where('created_at', '>=', now()->subMonth())
                 ->count(),
             'totalDone' => Document::query()
                 ->whereHas('creator')
-                ->where('current_status', 'selesai')
+                ->where('current_status', 'approved')
                 ->where('created_at', '>=', $startOfMonth)
                 ->count(),
             'totalRevision' => Document::query()
@@ -48,7 +48,7 @@ new class extends Component
             <div class="card-body p-4">
                 <div class="d-flex align-items-center gap-2 mb-4">
                     <i class="ti ti-clipboard-list fs-5 text-muted"></i>
-                    <h5 class="card-title fw-semibold mb-0">Pengajuan Izin</h5>
+                    <h5 class="card-title fw-semibold mb-0">Pengajuan Dokumen</h5>
                 </div>
 
                 <div class="row g-3 mb-3">
@@ -108,5 +108,5 @@ new class extends Component
             </div>
         </div>
     </div>
-    <livewire:admin.dashboard.show-recent-document />
+    <livewire:office.dashboard.show-recent-document />
 </div>

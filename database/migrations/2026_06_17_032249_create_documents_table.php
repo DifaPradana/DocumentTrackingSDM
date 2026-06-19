@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('documents', function (Blueprint $table) {
             $table->id('document_id');
             $table->string('judul_dokumen');
-            $table->enum('priority', ['mendesak', 'penting', 'normal']);
+            $table->enum('priority', ['tinggi', 'sedang', 'rendah'])->default('sedang');
             $table->enum('current_status', ['pending', 'waiting', 'hilang', 'revisi', 'approved', 'selesai'])->default('pending');
             $table->foreignId('created_by')->constrained('users', 'user_id');
             $table->foreignId('assigned_to')->constrained('users', 'user_id');
+            $table->date('deadline');
             $table->timestamps();
         });
     }

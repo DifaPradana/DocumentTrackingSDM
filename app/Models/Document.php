@@ -15,7 +15,12 @@ class Document extends Model
         'current_status',
         'created_by',
         'assigned_to',
-        'current_departement_id'
+        'current_departement_id',
+        'deadline'
+    ];
+
+    protected $casts = [
+        'deadline' => 'date',
     ];
 
     public function creator()

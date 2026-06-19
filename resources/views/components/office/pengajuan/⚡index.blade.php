@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Document;
+use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -37,6 +39,27 @@ new class extends Component
         $this->reset();
         $this->resetValidation();
     }
+
+    #[On('document-created')]
+    public function refreshData() {}
+
+    public function delete(Document $document)
+    {
+        $document->delete();
+        LivewireAlert::title('Berhasil')
+            ->text('Kamu berhasil delete dokumen')
+            ->success()
+            ->toast()
+            ->position('top-end')
+            ->timer(3000)
+            ->show();
+    }
+
+    public function editDokumen($document_id)
+    {
+        $this->dispatch('open-edit-document', document_id: $document_id);
+        // dd("Kirim dispatch + $role_id");
+    }
 };
 ?>
 
@@ -50,13 +73,19 @@ new class extends Component
                             <i class="ti ti-file-text me-2"></i>Dokumen
                         </h5>
                     </div>
-
-                    <a href="#tambahDokumenModal"
-                        data-bs-toggle="modal"
-                        class="btn btn-primary">
-                        <i class="ti ti-plus me-1"></i>
-                        Ajukan Dokumen
-                    </a>
+                    <button wire:click="$dispatch('open-create-document')" class="btn btn-primary">
+                        <i class="ti ti-plus me-1"></i> Ajukan Dokumen
+                    </button>
+                </div>
+                <br>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div class="flex">
+                        <div class="relative w-full">
+                            <input wire:model.live.debounce.300ms="search" type="text"
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 "
+                                placeholder="Search" required="">
+                        </div>
+                    </div>
                 </div>
             </div>
             <br>
@@ -71,27 +100,29 @@ new class extends Component
                             <th class="small text-muted fw-semibold">Ditugaskan ke</th>
                             <th class="small text-muted fw-semibold">Prioritas</th>
                             <th class="small text-muted fw-semibold">Status</th>
-                            <th class="small text-muted fw-semibold">Tanggal</th>
+                            <th class="small text-muted fw-semibold">Dibuat</th>
+                            <th class="small text-muted fw-semibold">Deadline</th>
+                            <th class="small text-muted fw-semibold">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($recentDocuments as $doc)
                         <tr class="text-center align-middle">
                             <td>
-                                <span class="fw-medium">{{ $doc->judul_dokumen }}</span>
+                                <span class="fw-medium">{{ ucwords($doc->judul_dokumen) }}</span>
                             </td>
-                            <td>{{ $doc->creator->nama_karyawan ?? '-' }}</td>
-                            <td>{{ $doc->assignee->nama_karyawan ?? '-' }}</td>
+                            <td>{{ ucwords($doc->creator->nama_karyawan ?? '-') }}</td>
+                            <td>{{ ucwords($doc->assignee->nama_karyawan ?? '-') }}</td>
                             <td>
                                 @php
                                 $priorityMap = [
-                                'urgent' => ['bg-danger-subtle text-danger-emphasis', 'Urgent'],
-                                'penting' => ['bg-warning-subtle text-warning-emphasis', 'Penting'],
-                                'normal' => ['bg-secondary-subtle text-secondary-emphasis', 'Normal'],
+                                'tinggi' => ['bg-danger-subtle text-danger-emphasis', 'Tinggi'],
+                                'sedang' => ['bg-warning-subtle text-warning-emphasis', 'Sedang'],
+                                'rendah' => ['bg-secondary-subtle text-secondary-emphasis', 'Rendah'],
                                 ];
                                 [$priorityClass, $priorityLabel] = $priorityMap[$doc->priority] ?? ['bg-secondary-subtle text-secondary-emphasis', $doc->priority];
                                 @endphp
-                                <span class="badge {{ $priorityClass }}">{{ $priorityLabel }}</span>
+                                <span class="badge {{ $priorityClass }}">{{ ucwords($priorityLabel) }}</span>
                             </td>
                             <td>
                                 @php
@@ -108,6 +139,33 @@ new class extends Component
                             </td>
                             <td>
                                 <span class="small text-muted">{{ $doc->created_at->format('d M Y') }}</span>
+                            </td>
+                            <td>
+                                <span class="small text-muted">{{ $doc->deadline->format('d M Y') }}</span>
+                            </td>
+                            <td class="border px-4 py-3 text-center text-black">
+                                <button
+                                    type="button"
+                                    wire:click="editDokumen({{ $doc->document_id }})"
+                                    wire:loading.attr="disabled"
+                                    wire:loading.class="opacity-50"
+                                    wire:target="editDokumen({{ $doc->document_id }})"
+                                    class="btn btn-warning m-1">
+                                    <span wire:loading.remove wire:target="editDokumen({{ $doc->document_id }})">
+                                        <i class="ti ti-pencil"></i>
+                                    </span>
+                                    <span wire:loading wire:target="editDokumen({{ $doc->document_id }})">
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    </span>
+                                </button>
+                                @if ($doc->status != 'selesai')
+                                <button
+                                    onclick="confirm('Kamu akan menghapus dokumen {{ $doc->judul_dokumen }} secara permanen, apakah yakin?') || event.stopImmediatePropagation()"
+                                    wire:click="delete({{ $doc->document_id }})"
+                                    class="btn btn-danger m-1">
+                                    <i class="ti ti-trash" aria-hidden="true"></i>
+                                </button>
+                                @endif
                             </td>
                         </tr>
                         @empty
@@ -139,4 +197,35 @@ new class extends Component
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('show-edit-modal', () => {
+                const modalEl = document.getElementById('editDocumentModal');
+
+                let modal = bootstrap.Modal.getInstance(modalEl);
+
+                if (!modal) {
+                    modal = new bootstrap.Modal(modalEl);
+                }
+
+                if (!modalEl.classList.contains('show')) {
+                    modal.show();
+                }
+            });
+
+            Livewire.on('hide-edit-modal', () => {
+                const modalEl = document.getElementById('editDocumentModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal?.hide();
+            });
+        });
+
+        // Fix overlay gelap: cleanup setiap kali modal selesai ditutup
+        document.getElementById('editDocumentModal').addEventListener('hidden.bs.modal', () => {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        });
+    </script>
 </div>

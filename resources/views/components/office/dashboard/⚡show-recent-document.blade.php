@@ -30,9 +30,8 @@ new class extends Component
 
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead class="table-light text-center">
                         <tr>
-                            <th class="small text-muted fw-semibold">Kode</th>
                             <th class="small text-muted fw-semibold">Judul</th>
                             <th class="small text-muted fw-semibold">Pengaju</th>
                             <th class="small text-muted fw-semibold">Ditugaskan ke</th>
@@ -41,12 +40,9 @@ new class extends Component
                             <th class="small text-muted fw-semibold">Tanggal</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="text-center">
                         @forelse ($recentDocuments as $doc)
                         <tr>
-                            <td>
-                                <span class="font-monospace small text-muted">{{ $doc->tracking_code }}</span>
-                            </td>
                             <td>
                                 <span class="fw-medium">{{ $doc->judul_dokumen }}</span>
                             </td>
@@ -55,9 +51,9 @@ new class extends Component
                             <td>
                                 @php
                                 $priorityMap = [
-                                'urgent' => ['bg-danger-subtle text-danger-emphasis', 'Urgent'],
-                                'penting' => ['bg-warning-subtle text-warning-emphasis', 'Penting'],
-                                'normal' => ['bg-secondary-subtle text-secondary-emphasis', 'Normal'],
+                                'tinggi' => ['bg-danger-subtle text-danger-emphasis', 'Tinggi'],
+                                'sedang' => ['bg-warning-subtle text-warning-emphasis', 'Sedang'],
+                                'rendah' => ['bg-secondary-subtle text-secondary-emphasis', 'Rendah'],
                                 ];
                                 [$priorityClass, $priorityLabel] = $priorityMap[$doc->priority] ?? ['bg-secondary-subtle text-secondary-emphasis', $doc->priority];
                                 @endphp
@@ -66,9 +62,9 @@ new class extends Component
                             <td>
                                 @php
                                 $statusMap = [
-                                'belum diproses' => ['bg-warning-subtle text-warning-emphasis', 'Belum Diproses'],
-                                'diproses' => ['bg-primary-subtle text-primary-emphasis', 'Diproses'],
-                                'selesai' => ['bg-success-subtle text-success-emphasis', 'Selesai'],
+                                'pending' => ['bg-warning-subtle text-warning-emphasis', 'Pending'],
+                                'waiting' => ['bg-primary-subtle text-primary-emphasis', 'Waiting'],
+                                'approved' => ['bg-success-subtle text-success-emphasis', 'Selesai'],
                                 'revisi' => ['bg-danger-subtle text-danger-emphasis', 'Revisi'],
                                 'hilang' => ['bg-dark-subtle text-dark-emphasis', 'Hilang'],
                                 ];

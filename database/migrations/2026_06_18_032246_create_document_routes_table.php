@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('document_routes', function (Blueprint $table) {
             $table->id('document_route_id');
-            $table->foreignId('document_id')->constrained('documents', 'document_id');
+            $table->foreignId('document_id')->constrained('documents', 'document_id')->onDelete('cascade');
             $table->foreignId('departement_id')->constrained('departements', 'departement_id');
             $table->integer('urutan');
             $table->integer('revisi')->nullable(); //ini isinya urutan berapa yang direvisi
-            $table->enum('status', ['pending', 'waiting', 'hilang', 'revisi', 'approved'])->default('pending');
+            $table->enum('status', ['pending', 'waiting', 'hilang', 'revisi', 'approved'])->default('waiting');
             $table->string('note')->nullable();
             $table->timestamps();
         });

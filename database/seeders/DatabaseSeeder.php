@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Departement;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -46,6 +47,16 @@ class DatabaseSeeder extends Seeder
             'nama_karyawan' => 'testcuy',
             'password' => 'dips',
             'role_id' => 3,
+        ]);
+
+        Departement::create([
+            'nama_departement' => 'Departement Satu',
+        ]);
+        Departement::create([
+            'nama_departement' => 'Departement Dua',
+        ]);
+        Departement::create([
+            'nama_departement' => 'Departement Tiga',
         ]);
     }
 }
