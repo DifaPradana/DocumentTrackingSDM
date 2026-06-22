@@ -86,6 +86,31 @@
                         <span class="hide-menu">Status Dokumen</span>
                     </a>
                 </li>
+                @elseif (auth()->user()->role_id == '3')
+                <li class="nav-small-cap">
+                    <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+                    <span class="hide-menu">Home</span>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="{{ route('adm.dashboard.page') }}" aria-expanded="false">
+                        <span>
+                            <i class="ti ti-layout-dashboard"></i>
+                        </span>
+                        <span class="hide-menu">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-small-cap">
+                    <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+                    <span class="hide-menu">Dokumen</span>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="{{ route('adm.task.page') }}" aria-expanded="false">
+                        <span>
+                            <i class="ti ti-checklist"></i>
+                        </span>
+                        <span class="hide-menu">Pengajuan</span>
+                    </a>
+                </li>
                 @endif
 
                 <li class="nav-small-cap">

@@ -22,4 +22,9 @@ Route::group(['middleware' => ['auth', 'role:Office'], 'prefix' => 'office'], fu
     Route::livewire('/document-status', 'office.pengajuan-detail.index')->name('office.pengajuan-detail.page');
 });
 
+Route::group(['middleware' => ['auth', 'role:ADM Kilang'], 'prefix' => 'adm-kilang'], function () {
+    Route::livewire('/dashboard', 'kilang.dashboard.index')->name('adm.dashboard.page');
+    Route::livewire('/task', 'kilang.task.index')->name('adm.task.page');
+});
+
 require __DIR__ . '/settings.php';

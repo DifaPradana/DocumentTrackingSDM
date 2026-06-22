@@ -25,7 +25,7 @@ new class extends Component
         <div class="card-body p-4">
             <div class="d-flex align-items-center gap-2 mb-4">
                 <i class="ti ti-file-text fs-5 text-muted"></i>
-                <h5 class="card-title fw-semibold mb-0">Dokumen Terbaru</h5>
+                <h5 class="card-title fw-semibold mb-0">Dokumen Hampir Deadline</h5>
             </div>
 
             <div class="table-responsive">
@@ -34,7 +34,6 @@ new class extends Component
                         <tr>
                             <th class="small text-muted fw-semibold">Judul</th>
                             <th class="small text-muted fw-semibold">Pengaju</th>
-                            <th class="small text-muted fw-semibold">Ditugaskan ke</th>
                             <th class="small text-muted fw-semibold">Prioritas</th>
                             <th class="small text-muted fw-semibold">Status</th>
                             <th class="small text-muted fw-semibold">Dibuat</th>
@@ -48,7 +47,6 @@ new class extends Component
                                 <span class="fw-medium">{{ $doc->judul_dokumen }}</span>
                             </td>
                             <td>{{ $doc->creator->nama_karyawan ?? '-' }}</td>
-                            <td>{{ $doc->assignee->nama_karyawan ?? '-' }}</td>
                             <td>
                                 @php
                                 $priorityMap = [
@@ -65,7 +63,7 @@ new class extends Component
                                 $statusMap = [
                                 'pending' => ['bg-warning-subtle text-warning-emphasis', 'Pending'],
                                 'waiting' => ['bg-primary-subtle text-primary-emphasis', 'Waiting'],
-                                'selesai' => ['bg-success-subtle text-success-emphasis', 'Selesai'],
+                                'approved' => ['bg-success-subtle text-success-emphasis', 'Selesai'],
                                 'revisi' => ['bg-danger-subtle text-danger-emphasis', 'Revisi'],
                                 'hilang' => ['bg-dark-subtle text-dark-emphasis', 'Hilang'],
                                 ];
@@ -93,7 +91,6 @@ new class extends Component
                     </tbody>
                 </table>
             </div>
-
         </div>
     </div>
 </div>

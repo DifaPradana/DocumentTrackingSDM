@@ -13,6 +13,7 @@ class DocumentRoute extends Model
         'departement_id',
         'urutan',
         'status',
+        'revisi',
         'note'
     ];
 

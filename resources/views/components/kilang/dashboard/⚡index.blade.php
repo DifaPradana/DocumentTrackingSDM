@@ -18,24 +18,24 @@ new class extends Component
 
         return [
             'totalUnprocessed' => Document::query()
-                ->whereHas('creator')
+                ->whereHas('assignee')
                 ->where('current_status', 'pending')
                 ->where('created_at', '>=', now()->subMonth())
                 ->count(),
             'totalProcessed' => Document::query()
-                ->whereHas('creator')
+                ->whereHas('assignee')
                 ->where('current_status', 'waiting')
                 ->where('created_at', '>=', now()->subMonth())
                 ->count(),
             'totalDone' => Document::query()
-                ->whereHas('creator')
+                ->whereHas('assignee')
                 ->where('current_status', 'selesai')
                 ->where('created_at', '>=', $startOfMonth)
                 ->count(),
-            'totalRevision' => Document::query()
-                ->whereHas('creator')
-                ->where('current_status', 'revisi')
-                ->where('created_at', '>=', $startOfMonth)
+            'totalNearDeadline' => Document::query()
+                ->whereHas('assignee')
+                ->where('current_status', 'pending')
+                ->whereDate('deadline', '<=', now()->addDays(3))
                 ->count(),
         ];
     }
@@ -79,28 +79,28 @@ new class extends Component
                         </a>
                     </div>
 
-                    {{-- Selesai --}}
+                    {{-- Disetujui --}}
                     <div class="col-md-3">
                         <a class="text-decoration-none d-block p-3 rounded-3 border border-success-subtle bg-success-subtle bg-opacity-25 stat-card"
                             style="border-left: 3px solid #3B6D11 !important;">
                             <i class="ti ti-circle-check text-success fs-5 mb-1 d-block"></i>
                             <div class="fw-semibold fs-4 text-success">{{ $totalDone }}</div>
-                            <div class="small text-muted">Selesai</div>
+                            <div class="small text-muted">Selesai </div>
                             <span class="badge bg-success-subtle text-success-emphasis mt-1 small">
                                 <i class="ti ti-point-filled me-1" style="font-size:10px"></i>Bulan ini
                             </span>
                         </a>
                     </div>
 
-                    {{-- Revisi --}}
+                    {{-- Dekat Deadline --}}
                     <div class="col-md-3">
                         <a class="text-decoration-none d-block p-3 rounded-3 border border-danger-subtle bg-danger-subtle bg-opacity-25 stat-card"
                             style="border-left: 3px solid #A32D2D !important;">
                             <i class="ti ti-circle-x text-danger fs-5 mb-1 d-block"></i>
-                            <div class="fw-semibold fs-4 text-danger">{{ $totalRevision }}</div>
-                            <div class="small text-muted">Revisi</div>
+                            <div class="fw-semibold fs-4 text-danger">{{ $totalNearDeadline }}</div>
+                            <div class="small text-muted">Mendekati Deadline</div>
                             <span class="badge bg-danger-subtle text-danger-emphasis mt-1 small">
-                                <i class="ti ti-point-filled me-1" style="font-size:10px"></i>Bulan ini
+                                <i class="ti ti-point-filled me-1" style="font-size:10px"></i>3 Hari Kedepan
                             </span>
                         </a>
                     </div>

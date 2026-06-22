@@ -56,7 +56,7 @@ new class extends Component {
                 break;
 
             default:
-                $route = 'karyawan.absensi.page';
+                $route = 'adm.dashboard.page';
                 break;
         }
 

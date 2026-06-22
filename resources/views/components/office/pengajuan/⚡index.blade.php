@@ -91,6 +91,7 @@ new class extends Component
             <br>
             <livewire:office.pengajuan.create-pengajuan />
             <livewire:office.pengajuan.edit-pengajuan />
+            <livewire:office.pengajuan.handle-revisi />
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
@@ -164,6 +165,14 @@ new class extends Component
                                     wire:click="delete({{ $doc->document_id }})"
                                     class="btn btn-danger m-1">
                                     <i class="ti ti-trash" aria-hidden="true"></i>
+                                </button>
+                                @endif
+                                @if ($doc->current_status == 'revisi')
+                                <button
+                                    type="button"
+                                    wire:click="$dispatch('open-handle-revisi', { document_id: {{ $doc->document_id }} })"
+                                    class="btn btn-info m-1">
+                                    <i class="ti ti-refresh"></i>
                                 </button>
                                 @endif
                             </td>

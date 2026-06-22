@@ -136,11 +136,11 @@
                     'departement_id' => $departement_id,
                     'urutan'         => $index + 1,
                     'revision'       => 1,
-                    'status'         => $index === 0 ? 'waiting' : 'pending',
+                    'status'         => 'pending',
                 ]);
             }
 
-            $this->showModal = false; // ← ganti dispatch('hide-edit-modal')
+            $this->showModal = false;
             $this->resetExcept(['karyawan_nonoffice', 'departement']);
             $this->selectedDepartements = [''];
             $this->dispatch('document-updated');

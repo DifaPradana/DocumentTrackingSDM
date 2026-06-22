@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Document;
+use App\Models\DocumentRoute;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -15,6 +16,7 @@ new class extends Component
 
     public function lihatProgress($documentId)
     {
+        $this->batalEditStatus();
         $this->selectedDocumentId = $documentId;
     }
 
@@ -28,7 +30,6 @@ new class extends Component
         return $this->view()
             ->with([
                 'documents' => Document::with(['documentRoute.departement'])
-                    ->where('created_by', auth()->id())
                     ->when(
                         $this->search,
                         fn($q) =>
@@ -39,13 +40,74 @@ new class extends Component
 
                 'selectedDocument' => $this->selectedDocumentId
                     ? Document::with([
-                        'documentRoute' => fn($q) => $q->orderBy('urutan'),
-                        'documentRoute.departement',
+                        'documentRoute' => fn($q) => $q->orderBy('urutan')->with('departement'),
                     ])->find($this->selectedDocumentId)
                     : null,
             ])
             ->layout('layouts.main')
-            ->title('DocTracker | Dashboard');
+            ->title('DocTracker | Task');
+    }
+
+    // Properti untuk edit
+    public $editingStepId = null;
+    public $editStatus = '';
+    public $editNote = '';
+
+    public function bukaEditStatus($stepId)
+    {
+        if ($this->editingStepId === $stepId) {
+            $this->batalEditStatus();
+            return;
+        }
+
+        $step = DocumentRoute::findOrFail($stepId);
+        $this->editingStepId = $stepId;
+        $this->editStatus = $step->status;
+        $this->editNote = $step->note ?? '';
+    }
+
+    public function batalEditStatus()
+    {
+        $this->editingStepId = null;
+        $this->editStatus = '';
+        $this->editNote = '';
+    }
+
+    public function simpanEditStatus()
+    {
+        $step = DocumentRoute::findOrFail($this->editingStepId);
+
+        $step->update([
+            'status' => $this->editStatus,
+            'note'   => $this->editNote ?: null,
+        ]);
+
+        $document = Document::findOrFail($step->document_id);
+
+        if ($this->editStatus === 'approved') {
+            // Cari step selanjutnya
+            $nextStep = DocumentRoute::where('document_id', $step->document_id)
+                ->where('urutan', '>', $step->urutan)
+                ->orderBy('urutan')
+                ->first();
+
+            if ($nextStep) {
+                // Masih ada step selanjutnya → pending
+                $nextStep->update(['status' => 'pending']);
+                $document->update(['current_status' => 'pending']);
+            } else {
+                // Tidak ada step lagi → dokumen selesai
+                $document->update(['current_status' => 'selesai']);
+            }
+        } elseif ($this->editStatus === 'revisi') {
+            $document->update(['current_status' => 'revisi']);
+        }
+
+        $this->batalEditStatus();
+
+        $docId = $this->selectedDocumentId;
+        $this->selectedDocumentId = null;
+        $this->selectedDocumentId = $docId;
     }
 };
 ?>
@@ -60,9 +122,6 @@ new class extends Component
                             <i class="ti ti-file-text me-2"></i>Dokumen
                         </h5>
                     </div>
-                    <button wire:click="$dispatch('open-create-document')" class="btn btn-primary">
-                        <i class="ti ti-plus me-1"></i> Ajukan Dokumen
-                    </button>
                 </div>
                 <br>
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -86,6 +145,7 @@ new class extends Component
                                     <th class="ps-3 small text-muted fw-semibold">Judul Dokumen</th>
                                     <th class="small text-muted fw-semibold">Prioritas</th>
                                     <th class="small text-muted fw-semibold">Status</th>
+                                    <th class="small text-muted fw-semibold">Posisi Dokumen</th>
                                     <th class="small text-muted fw-semibold">Progress</th>
                                     <th class="small text-muted fw-semibold">Dibuat</th>
                                     <th class="small text-muted fw-semibold">Deadline</th>
@@ -110,7 +170,7 @@ new class extends Component
                                 $statusMap = [
                                 'pending' => ['bg-warning-subtle text-warning-emphasis', 'Pending'],
                                 'waiting' => ['bg-primary-subtle text-primary-emphasis', 'Waiting'],
-                                'revisi' => ['bg-info-subtle text-info-emphasis', 'Revisi'],
+                                'revisi' => ['bg-danger-subtle text-danger-emphasis', 'Revisi'],
                                 'approved' => ['bg-success-subtle text-success-emphasis', 'Approved'],
                                 'selesai' => ['bg-success-subtle text-success-emphasis', 'Selesai'],
                                 'hilang' => ['bg-dark-subtle text-dark-emphasis', 'Hilang'],
@@ -136,6 +196,16 @@ new class extends Component
                                         </td>
                                         <td>
                                             <span class="badge {{ $statusClass }}">{{ $statusLabel }}</span>
+                                        </td>
+                                        <td class="ps-3">
+                                            @php
+                                            $currentStep = $doc->documentRoute
+                                            ->firstWhere('status', 'pending');
+                                            @endphp
+
+                                            <span class="fw-medium">
+                                                {{ $currentStep?->departement?->nama_departement ?? '-' }}
+                                            </span>
                                         </td>
                                         <td style="min-width:130px">
                                             <div class="d-flex align-items-center gap-2">
@@ -194,13 +264,13 @@ new class extends Component
 
                 {{-- Detail Progress --}}
                 @if ($selectedDocument)
-                @php $steps = $selectedDocument->documentRoute->sortBy('urutan'); @endphp
+                @php $steps = $selectedDocument->documentRoute; @endphp
                 <div class="col-lg-5">
                     <div class="card h-100 shadow-sm">
+                        <!-- Header Detail Progress -->
                         <div class="card-header d-flex justify-content-between align-items-start border-bottom py-3">
                             <div>
                                 <h6 class="mb-0 fw-semibold">{{ ucfirst($selectedDocument->judul_dokumen) }}</h6>
-                                <small class="text-muted">{{ $selectedDocument->tracking_code }}</small>
                                 <div class="mt-1 d-flex gap-1 flex-wrap">
                                     @php
                                     [$pc, $pl] = $priorityMap[$selectedDocument->priority]
@@ -222,7 +292,8 @@ new class extends Component
 
                         <div class="card-body overflow-auto" style="max-height: 480px">
                             <ul class="timeline-widget mb-0 position-relative mb-n5">
-                                @foreach ($steps as $step)
+
+                                @foreach ($steps as $index => $step)
                                 @php
                                 $bulletColor = match($step->status) {
                                 'approved' => 'success',
@@ -251,36 +322,91 @@ new class extends Component
                                 'pending' => 'Pending',
                                 default => ucfirst($step->status),
                                 };
-                                $statusIcon = match($step->status) {
-                                'approved' => '✓',
-                                'rejected' => '✕',
-                                default => $step->urutan,
-                                };
-                                @endphp
 
-                                <li class="timeline-item d-flex position-relative overflow-hidden">
+                                @endphp
+                                <li wire:key="step-{{ $step->document_route_id }}" class="timeline-item d-flex position-relative overflow-hidden">
                                     <div class="timeline-badge-wrap d-flex flex-column align-items-center">
                                         <span class="timeline-badge border-2 bg-{{ $bulletColor }} flex-shrink-0 my-8"></span>
                                         @if (!$loop->last)
                                         <span class="timeline-badge-border d-block flex-shrink-0"></span>
                                         @endif
                                     </div>
-                                    <div class="timeline-desc fs-3 text-dark mt-n1">
-                                        <span class="fw-semibold">{{ $step->departement->nama_departement }}</span>
-                                        <span class="badge {{ $badgeClass }} ms-1" style="font-size:10px">
-                                            {{ $statusLabel }}
-                                        </span>
-                                        @if ($step->note)
-                                        <div class="text-muted fst-italic mt-1" style="font-size:11px">
-                                            "{{ $step->note }}"
+                                    <div class="timeline-desc fs-3 text-dark mt-n1 w-100">
+                                        <div class="d-flex justify-content-between align-items-start gap-2">
+                                            <div>
+                                                <span class="fw-semibold">{{ $step->departement->nama_departement }}</span>
+                                                <span class="badge {{ $badgeClass }} ms-1" style="font-size:10px">
+                                                    {{ $statusLabel }}
+                                                </span>
+                                                @if ($step->note)
+                                                <div class="text-muted fst-italic mt-1" style="font-size:11px">
+                                                    "{{ $step->note }}"
+                                                </div>
+                                                @endif
+                                                @if ($step->revisi)
+                                                <div class="mt-1">
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size:10px">
+                                                        Revisi dari step {{ $step->revisi }}
+                                                    </span>
+                                                </div>
+                                                @endif
+                                            </div>
                                         </div>
+
+                                        {{-- Inline Edit Form --}}
+                                        @php
+                                        $hasPreviousRevisi = collect($steps)
+                                        ->take($index)
+                                        ->contains(fn ($item) => $item->status === 'revisi');
+
+                                        $canEdit =
+                                        in_array($step->status, ['pending', 'waiting']) &&
+                                        !$hasPreviousRevisi;
+                                        @endphp
+                                        @if ($editingStepId == $step->document_route_id)
+
+                                        <div class="mt-2 p-2 rounded border bg-light">
+                                            <div class="mb-2">
+                                                <label class="form-label mb-1" style="font-size:11px; font-weight:600;">Status</label>
+                                                <select wire:model="editStatus" class="form-select form-select-sm">
+                                                    <option value="pending">Pending</option>
+                                                    <option value="waiting">Waiting</option>
+                                                    <option value="approved">Approved</option>
+                                                    <option value="revisi">Revisi</option>
+                                                    <option value="hilang">Hilang</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label mb-1" style="font-size:11px; font-weight:600;">Catatan</label>
+                                                <textarea
+                                                    wire:model="editNote"
+                                                    class="form-control form-control-sm"
+                                                    rows="2"
+                                                    placeholder="Tambahkan catatan... (opsional)"
+                                                    style="font-size:11px"></textarea>
+                                            </div>
+                                            <div class="d-flex gap-1 justify-content-end">
+                                                <button
+                                                    wire:click="batalEditStatus"
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    style="font-size:11px; padding: 2px 8px;">Batal</button>
+                                                <button
+                                                    wire:click="simpanEditStatus"
+                                                    class="btn btn-sm btn-primary"
+                                                    style="font-size:11px; padding: 2px 8px;">
+                                                    <i class="ti ti-check me-1"></i>Simpan
+                                                </button>
+                                            </div>
+                                        </div>
+                                        @else
+
+                                        @if ($canEdit)
+                                        <button
+                                            wire:click="bukaEditStatus({{ $step->document_route_id }})"
+                                            class="btn btn-sm btn-outline-primary mt-2">
+                                            Edit
+                                        </button>
                                         @endif
-                                        @if ($step->revisi)
-                                        <div class="mt-1">
-                                            <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size:10px">
-                                                Revisi dari step {{ $step->revisi }}
-                                            </span>
-                                        </div>
                                         @endif
                                     </div>
                                 </li>
