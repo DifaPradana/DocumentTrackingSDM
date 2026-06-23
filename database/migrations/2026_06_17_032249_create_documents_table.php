@@ -15,10 +15,12 @@ return new class extends Migration
             $table->id('document_id');
             $table->string('judul_dokumen');
             $table->enum('priority', ['tinggi', 'sedang', 'rendah'])->default('sedang');
-            $table->enum('current_status', ['pending', 'waiting', 'hilang', 'revisi', 'approved', 'selesai'])->default('pending');
+            $table->enum('current_status', ['none', 'unprocessed', 'onprocess', 'hilang', 'revisi', 'approved', 'done', 'closed'])->default('none');
             $table->foreignId('created_by')->constrained('users', 'user_id');
             $table->foreignId('assigned_to')->constrained('users', 'user_id');
             $table->date('deadline');
+            $table->string('photo_start');
+            $table->string('photo_done')->nullable();
             $table->timestamps();
         });
     }

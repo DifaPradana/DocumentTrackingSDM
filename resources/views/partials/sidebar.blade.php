@@ -86,6 +86,19 @@
                         <span class="hide-menu">Status Dokumen</span>
                     </a>
                 </li>
+
+                <li class="nav-small-cap">
+                    <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+                    <span class="hide-menu">Section Head</span>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="{{ route('office.pengajuan.page') }}" aria-expanded="false">
+                        <span>
+                            <i class="ti ti-users"></i>
+                        </span>
+                        <span class="hide-menu">List Section Head</span>
+                    </a>
+                </li>
                 @elseif (auth()->user()->role_id == '3')
                 <li class="nav-small-cap">
                     <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
@@ -108,7 +121,7 @@
                         <span>
                             <i class="ti ti-checklist"></i>
                         </span>
-                        <span class="hide-menu">Pengajuan</span>
+                        <span class="hide-menu">Task</span>
                     </a>
                 </li>
                 @endif

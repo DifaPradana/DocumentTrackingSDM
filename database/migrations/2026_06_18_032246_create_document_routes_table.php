@@ -17,7 +17,9 @@ return new class extends Migration
             $table->foreignId('departement_id')->constrained('departements', 'departement_id');
             $table->integer('urutan');
             $table->integer('revisi')->nullable(); //ini isinya urutan berapa yang direvisi
-            $table->enum('status', ['pending', 'waiting', 'hilang', 'revisi', 'approved'])->default('waiting');
+            $table->enum('status', ['none', 'unprocessed', 'onprocess', 'hilang', 'revisi', 'approved'])->default('onprocess');
+            $table->dateTime('kapan_onprocess')->nullable();
+            $table->dateTime('kapan_approved')->nullable();
             $table->string('note')->nullable();
             $table->timestamps();
         });

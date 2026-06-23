@@ -125,19 +125,31 @@
             ]);
 
             // Filter departemen yang dipilih (buang yang kosong)
+            // Filter departemen yang dipilih (buang yang kosong)
             $departements = array_values(array_filter($this->selectedDepartements));
 
-            // Hapus semua routes lama lalu insert ulang dengan urutan baru
-            DocumentRoute::where('document_id', $this->document_id)->delete();
+            // Cek apakah departemen berubah
+            $existingDepartements = DocumentRoute::where('document_id', $this->document_id)
+                ->orderBy('urutan')
+                ->pluck('departement_id')
+                ->map(fn($id) => (string) $id)
+                ->toArray();
 
-            foreach ($departements as $index => $departement_id) {
-                DocumentRoute::create([
-                    'document_id'    => $this->document_id,
-                    'departement_id' => $departement_id,
-                    'urutan'         => $index + 1,
-                    'revision'       => 1,
-                    'status'         => 'pending',
-                ]);
+            $newDepartements = array_map('strval', $departements);
+
+            if ($existingDepartements !== $newDepartements) {
+                // Hapus semua routes lama lalu insert ulang dengan urutan baru
+                DocumentRoute::where('document_id', $this->document_id)->delete();
+
+                foreach ($departements as $index => $departement_id) {
+                    DocumentRoute::create([
+                        'document_id'    => $this->document_id,
+                        'departement_id' => $departement_id,
+                        'urutan'         => $index + 1,
+                        'revision'       => 1,
+                        'status'         => $index === 0 ? 'unprocessed' : 'none',
+                    ]);
+                }
             }
 
             $this->showModal = false;

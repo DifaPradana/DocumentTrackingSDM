@@ -11,6 +11,7 @@ new class extends Component
             'recentDocuments' => Document::query()
                 ->whereHas('creator')
                 ->with(['creator', 'assignee'])
+                ->where('current_status', '!=', 'selesai')
                 ->latest()
                 ->take(10)
                 ->get(),
@@ -34,19 +35,18 @@ new class extends Component
                         <tr>
                             <th class="small text-muted fw-semibold">Judul</th>
                             <th class="small text-muted fw-semibold">PIC</th>
-                            <th class="small text-muted fw-semibold">Ditugaskan ke</th>
+                            <th class="small text-muted fw-semibold">Router</th>
                             <th class="small text-muted fw-semibold">Prioritas</th>
                             <th class="small text-muted fw-semibold">Status</th>
                             <th class="small text-muted fw-semibold">Dibuat</th>
                             <th class="small text-muted fw-semibold">Deadline</th>
-                            <th class="small text-muted fw-semibold">Photo</th>
                         </tr>
                     </thead>
                     <tbody class="text-center">
                         @forelse ($recentDocuments as $doc)
                         <tr>
                             <td>
-                                <span class="fw-medium">{{ ucwords($doc->judul_dokumen) }}</span>
+                                <span class="fw-medium">{{ $doc->judul_dokumen }}</span>
                             </td>
                             <td>{{ $doc->creator->nama_karyawan ?? '-' }}</td>
                             <td>{{ $doc->assignee->nama_karyawan ?? '-' }}</td>
@@ -82,15 +82,6 @@ new class extends Component
                                     {{ $doc->deadline->format('d M Y') }}
                                 </span>
                             </td>
-                            <td>
-                                <button
-                                    type="button"
-                                    class="btn btn-primary btn-sm"
-                                    onclick="showModal('modalDokumen{{ $doc->document_id }}')">
-                                    <i class="ti ti-eye"></i>
-                                    Lihat Dokumen
-                                </button>
-                            </td>
                         </tr>
                         @empty
                         <tr>
@@ -103,94 +94,6 @@ new class extends Component
                     </tbody>
                 </table>
             </div>
-            <div
-                class="modal fade"
-                id="modalDokumen{{ $doc->document_id }}"
-                tabindex="-1"
-                aria-hidden="true"
-                wire:ignore.self>
-
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content">
-
-                        <div class="modal-header">
-                            <h5 class="modal-title">
-                                Dokumen {{ ucwords($doc->judul_dokumen) }}
-                            </h5>
-
-                            <button
-                                type="button"
-                                class="btn-close"
-                                onclick="hideModal('modalDokumen{{ $doc->document_id }}')">
-                            </button>
-                        </div>
-
-                        <div class="modal-body text-center">
-
-                            @php
-                            $ext = strtolower(pathinfo($doc->photo_start, PATHINFO_EXTENSION));
-                            @endphp
-
-                            @if(in_array($ext, ['jpg','jpeg','png','webp']))
-                            <img
-                                src="{{ asset('storage/'.$doc->photo_start) }}"
-                                class="img-fluid rounded">
-                            @elseif($ext === 'pdf')
-                            <iframe
-                                src="{{ asset('storage/'.$doc->photo_start) }}"
-                                width="100%"
-                                height="600">
-                            </iframe>
-                            @else
-                            <a
-                                href="{{ asset('storage/'.$doc->photo_start) }}"
-                                target="_blank"
-                                class="btn btn-primary">
-
-                                Download Dokumen
-
-                            </a>
-                            @endif
-
-                        </div>
-
-                        <div class="modal-footer">
-                            <button
-                                type="button"
-                                class="btn btn-secondary"
-                                onclick="hideModal('modalDokumen{{ $doc->document_id }}')">
-
-                                Tutup
-
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
-    <script>
-        function showModal(id) {
-            const el = document.getElementById(id);
-            if (!el) return;
-            new bootstrap.Modal(el, {
-                backdrop: true
-            }).show();
-        }
-
-        function hideModal(id) {
-            const el = document.getElementById(id);
-            if (!el) return;
-            const modal = bootstrap.Modal.getInstance(el);
-            if (modal) modal.hide();
-        }
-
-        document.addEventListener('hidden.bs.modal', function() {
-            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('overflow');
-            document.body.style.removeProperty('padding-right');
-        });
-    </script>
 </div>

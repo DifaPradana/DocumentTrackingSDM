@@ -14,7 +14,9 @@ class DocumentRoute extends Model
         'urutan',
         'status',
         'revisi',
-        'note'
+        'note',
+        'kapan_onprocess',
+        'kapan_approved'
     ];
 
     public function document()

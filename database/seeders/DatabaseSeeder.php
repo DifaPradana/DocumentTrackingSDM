@@ -50,13 +50,105 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Departement::create([
-            'nama_departement' => 'Departement Satu',
+            'nama_departement' => 'MA 1',
         ]);
         Departement::create([
-            'nama_departement' => 'Departement Dua',
+            'nama_departement' => 'MA 2',
         ]);
         Departement::create([
-            'nama_departement' => 'Departement Tiga',
+            'nama_departement' => 'MA 3',
+        ]);
+        Departement::create([
+            'nama_departement' => 'MA 4',
+        ]);
+        Departement::create([
+            'nama_departement' => 'MA 5',
+        ]);
+        Departement::create([
+            'nama_departement' => 'MA 6',
+        ]);
+        Departement::create([
+            'nama_departement' => 'MA 7',
+        ]);
+        Departement::create([
+            'nama_departement' => 'GEN MAINT',
+        ]);
+        Departement::create([
+            'nama_departement' => 'LOC 1',
+        ]);
+        Departement::create([
+            'nama_departement' => 'LOC 2',
+        ]);
+        Departement::create([
+            'nama_departement' => 'LOC 3',
+        ]);
+
+        Departement::create([
+            'nama_departement' => 'FOC 1',
+        ]);
+
+        Departement::create([
+            'nama_departement' => 'FOC 2',
+        ]);
+
+        Departement::create([
+            'nama_departement' => 'KPC',
+        ]);
+
+        Departement::create([
+            'nama_departement' => 'OM 60 & NBM',
+        ]);
+        Departement::create([
+            'nama_departement' => 'UTL 05, 50, 500',
+        ]);
+        Departement::create([
+            'nama_departement' => 'UTL RFCC',
+        ]);
+        Departement::create([
+            'nama_departement' => 'RFCC',
+        ]);
+        Departement::create([
+            'nama_departement' => 'ISOM LNHT',
+        ]);
+        Departement::create([
+            'nama_departement' => 'LABORATORIUM',
+        ]);
+        Departement::create([
+            'nama_departement' => 'PPTL',
+        ]);
+        Departement::create([
+            'nama_departement' => 'OM 70',
+        ]);
+
+        Departement::create([
+            'nama_departement' => 'WORKSHOP',
+        ]);
+        Departement::create([
+            'nama_departement' => 'HSSE',
+        ]);
+        Departement::create([
+            'nama_departement' => 'ME 1',
+        ]);
+        Departement::create([
+            'nama_departement' => 'ME 2',
+        ]);
+        Departement::create([
+            'nama_departement' => 'PROD 1',
+        ]);
+        Departement::create([
+            'nama_departement' => 'PROD 2',
+        ]);
+        Departement::create([
+            'nama_departement' => 'PROD 3',
+        ]);
+        Departement::create([
+            'nama_departement' => 'EIIE',
+        ]);
+        Departement::create([
+            'nama_departement' => 'GROUP HEAD / SMOM',
+        ]);
+        Departement::create([
+            'nama_departement' => '',
         ]);
     }
 }

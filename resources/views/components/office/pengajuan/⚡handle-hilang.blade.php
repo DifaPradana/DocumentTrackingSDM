@@ -13,54 +13,68 @@ new class extends Component
     public $document;
     public $routes = [];
     public $selectedUrutan;
+    public $aksi = null; // 'ulang' | 'close'
 
-    #[On('open-handle-revisi')]
+    #[On('open-handle-hilang')]
     public function openModal($document_id)
     {
         $this->document_id = $document_id;
         $this->document = Document::find($document_id);
 
-        // Ambil semua routes, termasuk yang revisi untuk ditampilkan
         $this->routes = DocumentRoute::where('document_id', $document_id)
             ->with('departement')
             ->orderBy('urutan')
             ->get();
 
         $this->selectedUrutan = null;
+        $this->aksi = null;
         $this->showModal = true;
     }
 
     public function closeModal()
     {
         $this->showModal = false;
-        $this->reset(['document_id', 'document', 'routes', 'selectedUrutan']);
+        $this->reset(['document_id', 'document', 'routes', 'selectedUrutan', 'aksi']);
     }
 
-    public function handleRevisi()
+    public function handleSubmit()
     {
         $this->validate([
-            'selectedUrutan' => 'required|integer|min:1',
+            'aksi' => 'required|in:ulang,close',
         ], [
-            'selectedUrutan.required' => 'Pilih step tujuan revisi',
+            'aksi.required' => 'Pilih salah satu tindakan',
         ]);
 
+        if ($this->aksi === 'ulang') {
+            $this->validate([
+                'selectedUrutan' => 'required|integer|min:1',
+            ], [
+                'selectedUrutan.required' => 'Pilih step yang akan diulang',
+            ]);
 
-        DocumentRoute::where('document_id', $this->document_id)
-            ->where('urutan', $this->selectedUrutan)
-            ->update(['status' => 'unprocessed', 'note' => null]);
+            DocumentRoute::where('document_id', $this->document_id)
+                ->where('urutan', $this->selectedUrutan)
+                ->update(['status' => 'unprocessed', 'note' => null]);
 
-        DocumentRoute::where('document_id', $this->document_id)
-            ->where('urutan', '>', $this->selectedUrutan)
-            ->update(['status' => 'none', 'note' => null]);
+            DocumentRoute::where('document_id', $this->document_id)
+                ->where('urutan', '>', $this->selectedUrutan)
+                ->update(['status' => 'none', 'note' => null]);
 
-        // Update current_status dokumen
-        Document::where('document_id', $this->document_id)
-            ->update(['current_status' => 'unprocessed']);
+            Document::where('document_id', $this->document_id)
+                ->update(['current_status' => 'unprocessed']);
+
+            $message = 'Dokumen dikembalikan ke step ' . $this->selectedUrutan;
+        } elseif ($this->aksi === 'close') {
+            Document::where('document_id', $this->document_id)
+                ->update(['current_status' => 'closed']);
+
+            $message = 'Dokumen ditutup (case close)';
+        }
 
         $this->closeModal();
 
         LivewireAlert::title('Berhasil')
-            ->text('Dokumen dikembalikan ke step ' . $this->selectedUrutan)
+            ->text($message)
             ->success()
             ->toast()
             ->position('top-end')
@@ -83,7 +97,7 @@ new class extends Component
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-semibold">Handle Revisi</h5>
+                    <h5 class="modal-title fw-semibold">Handle Hilang</h5>
                     <button type="button" class="btn-close" wire:click="closeModal"></button>
                 </div>
 
@@ -91,22 +105,22 @@ new class extends Component
                     @if ($document)
                     <p class="text-muted mb-3">
                         Dokumen <strong>{{ ucwords($document->judul_dokumen) }}</strong>
-                        sedang dalam status revisi. Pilih step yang akan diulang:
+                        sedang dalam status hilang. Pilih tindakan yang akan dilakukan:
                     </p>
 
-                    {{-- Tampilkan stepper current state - tampilkan SEMUA step --}}
+                    {{-- Stepper --}}
                     <div class="d-flex align-items-start mb-4 flex-wrap gap-1">
                         @foreach ($routes as $route)
                         @php
                         $stepColor = match($route->status) {
                         'approved' => 'success',
-                        'revisi' => 'danger',
+                        'hilang' => 'danger',
                         'none' => 'primary',
                         default => 'secondary',
                         };
                         $stepIcon = match($route->status) {
                         'approved' => '✓',
-                        'revisi' => '↩',
+                        'hilang' => '!',
                         default => $route->urutan,
                         };
                         @endphp
@@ -127,21 +141,59 @@ new class extends Component
                         </div>
 
                         @if (!$loop->last)
-                        {{-- padding-top 16px = setengah tinggi circle (32px) supaya garis sejajar tengah circle --}}
-                        <div style="height:2px;flex:1;min-width:16px;background:#dee2e6;padding-top:0;margin-top:15px;flex-shrink:0"></div>
+                        <div style="height:2px;flex:1;min-width:16px;background:#dee2e6;margin-top:15px;flex-shrink:0"></div>
                         @endif
 
                         @endforeach
                     </div>
 
-                    {{-- Pilih step tujuan --}}
+                    {{-- Pilihan Aksi (Radio) --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Tindakan:</label>
+
+                        <div class="form-check border rounded p-3 mb-2 {{ $aksi === 'ulang' ? 'border-primary bg-primary bg-opacity-10' : '' }}"
+                            style="cursor:pointer"
+                            wire:click="$set('aksi', 'ulang')">
+                            <input class="form-check-input" type="radio"
+                                wire:model="aksi"
+                                value="ulang"
+                                id="aksi_ulang">
+                            <label class="form-check-label fw-medium" for="aksi_ulang" style="cursor:pointer">
+                                Ulang di Step yang Hilang
+                            </label>
+                            <div class="text-muted" style="font-size:12px">
+                                Dokumen dikembalikan dan diproses ulang dari step yang hilang
+                            </div>
+                        </div>
+
+                        <div class="form-check border rounded p-3 {{ $aksi === 'close' ? 'border-danger bg-danger bg-opacity-10' : '' }}"
+                            style="cursor:pointer"
+                            wire:click="$set('aksi', 'close')">
+                            <input class="form-check-input" type="radio"
+                                wire:model="aksi"
+                                value="close"
+                                id="aksi_close">
+                            <label class="form-check-label fw-medium text-danger" for="aksi_close" style="cursor:pointer">
+                                Case Close
+                            </label>
+                            <div class="text-muted" style="font-size:12px">
+                                Dokumen ditutup karena tidak ditemukan
+                            </div>
+                        </div>
+
+                        @error('aksi')
+                        <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                    </div>
+
+                    {{-- Pilih Step (muncul hanya jika aksi = ulang) --}}
+                    @if ($aksi === 'ulang')
                     <div class="mb-3">
                         <label class="form-label fw-medium">Kembalikan ke step:</label>
                         <select wire:model="selectedUrutan" class="form-select">
                             <option value="">-- Pilih Step --</option>
                             @foreach ($routes as $route)
-                            {{-- Hanya tampilkan step yang bukan setelah revisi --}}
-                            @if ($route->status !== 'none')
+                            @if ($route->status === 'hilang')
                             <option value="{{ $route->urutan }}">
                                 Step {{ $route->urutan }} — {{ $route->departement->nama_departement }}
                             </option>
@@ -153,12 +205,16 @@ new class extends Component
                         @enderror
                     </div>
                     @endif
+
+                    @endif
                 </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" wire:click="closeModal">Batal</button>
-                    <button type="button" class="btn btn-primary" wire:click="handleRevisi">
-                        Kirim Ulang
+                    <button type="button"
+                        class="btn {{ $aksi === 'close' ? 'btn-danger' : 'btn-primary' }}"
+                        wire:click="handleSubmit">
+                        {{ $aksi === 'close' ? 'Tutup Dokumen' : 'Kirim Ulang' }}
                     </button>
                 </div>
             </div>

@@ -35,6 +35,7 @@ new class extends Component
                         fn($q) =>
                         $q->where('judul_dokumen', 'like', "%{$this->search}%")
                     )
+                    ->where('current_status', '!=', 'selesai')
                     ->latest()
                     ->paginate($this->perPage),
 
@@ -77,12 +78,26 @@ new class extends Component
     {
         $step = DocumentRoute::findOrFail($this->editingStepId);
 
-        $step->update([
+        $dataUpdate = [
             'status' => $this->editStatus,
             'note'   => $this->editNote ?: null,
-        ]);
+        ];
+
+        if ($this->editStatus === 'onprocess' && is_null($step->kapan_onprocess)) {
+            $dataUpdate['kapan_onprocess'] = now();
+        }
+
+        if ($this->editStatus === 'approved') {
+            $dataUpdate['kapan_approved'] = now();
+        }
+
+        $step->update($dataUpdate);
 
         $document = Document::findOrFail($step->document_id);
+
+        $document->update([
+            'current_status' => $this->editStatus
+        ]);
 
         if ($this->editStatus === 'approved') {
             // Cari step selanjutnya
@@ -92,15 +107,23 @@ new class extends Component
                 ->first();
 
             if ($nextStep) {
-                // Masih ada step selanjutnya → pending
-                $nextStep->update(['status' => 'pending']);
-                $document->update(['current_status' => 'pending']);
+                $nextStep->update([
+                    'status' => 'unprocessed'
+                ]);
+
+                $document->update([
+                    'current_status' => 'unprocessed'
+                ]);
             } else {
                 // Tidak ada step lagi → dokumen selesai
-                $document->update(['current_status' => 'selesai']);
+                $document->update([
+                    'current_status' => 'done'
+                ]);
             }
         } elseif ($this->editStatus === 'revisi') {
-            $document->update(['current_status' => 'revisi']);
+            $document->update([
+                'current_status' => 'revisi'
+            ]);
         }
 
         $this->batalEditStatus();
@@ -119,7 +142,7 @@ new class extends Component
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div>
                         <h5 class="mb-0 fw-semibold">
-                            <i class="ti ti-file-text me-2"></i>Dokumen
+                            <i class="ti ti-file-text me-2"></i>Dokumen Yang Harus Dikerjakan
                         </h5>
                     </div>
                 </div>
@@ -145,7 +168,7 @@ new class extends Component
                                     <th class="ps-3 small text-muted fw-semibold">Judul Dokumen</th>
                                     <th class="small text-muted fw-semibold">Prioritas</th>
                                     <th class="small text-muted fw-semibold">Status</th>
-                                    <th class="small text-muted fw-semibold">Posisi Dokumen</th>
+                                    <th class="small text-muted fw-semibold">Tujuan</th>
                                     <th class="small text-muted fw-semibold">Progress</th>
                                     <th class="small text-muted fw-semibold">Dibuat</th>
                                     <th class="small text-muted fw-semibold">Deadline</th>
@@ -168,8 +191,8 @@ new class extends Component
                                 ?? ['bg-secondary-subtle text-secondary-emphasis', ucfirst($doc->priority)];
 
                                 $statusMap = [
-                                'pending' => ['bg-warning-subtle text-warning-emphasis', 'Pending'],
-                                'waiting' => ['bg-primary-subtle text-primary-emphasis', 'Waiting'],
+                                'unprocessed' => ['bg-warning-subtle text-warning-emphasis', 'Unprocessed'],
+                                'onprocess' => ['bg-primary-subtle text-primary-emphasis', 'Onprocess'],
                                 'revisi' => ['bg-danger-subtle text-danger-emphasis', 'Revisi'],
                                 'approved' => ['bg-success-subtle text-success-emphasis', 'Approved'],
                                 'selesai' => ['bg-success-subtle text-success-emphasis', 'Selesai'],
@@ -200,7 +223,7 @@ new class extends Component
                                         <td class="ps-3">
                                             @php
                                             $currentStep = $doc->documentRoute
-                                            ->firstWhere('status', 'pending');
+                                            ->first(fn($route) => !in_array($route->status, ['none', 'approved']));
                                             @endphp
 
                                             <span class="fw-medium">
@@ -235,7 +258,7 @@ new class extends Component
 
                                     @empty
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted py-5">
+                                        <td colspan="8" class="text-center text-muted py-5">
                                             <i class="ti ti-inbox fs-2 d-block mb-2"></i>
                                             Belum ada dokumen.
                                         </td>
@@ -297,11 +320,11 @@ new class extends Component
                                 @php
                                 $bulletColor = match($step->status) {
                                 'approved' => 'success',
-                                'rejected' => 'danger',
-                                'revisi' => 'warning',
-                                'hilang' => 'dark',
-                                'waiting' => 'primary',
-                                'pending' => 'warning',
+                                'revisi' => 'danger',
+                                'hilang' => 'danger',
+                                'onprocess' => 'primary',
+                                'none' => 'secondary',
+                                'unprocessed' => 'warning',
                                 default => 'secondary',
                                 };
                                 $badgeClass = match($step->status) {
@@ -309,8 +332,9 @@ new class extends Component
                                 'rejected' => 'bg-danger-subtle text-danger-emphasis',
                                 'revisi' => 'bg-danger-subtle text-danger-emphasis',
                                 'hilang' => 'bg-dark-subtle text-dark-emphasis',
-                                'waiting' => 'bg-primary-subtle text-primary-emphasis',
-                                'pending' => 'bg-warning-subtle text-warning-emphasis',
+                                'onprocess' => 'bg-primary-subtle text-primary-emphasis',
+                                'none' => 'bg-secondary-subtle text-secondary-emphasis',
+                                'unprocessed' => 'bg-warning-subtle text-warning-emphasis',
                                 default => 'bg-secondary-subtle text-secondary-emphasis',
                                 };
                                 $statusLabel = match($step->status) {
@@ -318,8 +342,8 @@ new class extends Component
                                 'rejected' => 'Rejected',
                                 'revisi' => 'Revisi',
                                 'hilang' => 'Hilang',
-                                'waiting' => 'Waiting',
-                                'pending' => 'Pending',
+                                'onprocess' => 'Onprocess',
+                                'none' => 'None',
                                 default => ucfirst($step->status),
                                 };
 
@@ -339,8 +363,8 @@ new class extends Component
                                                     {{ $statusLabel }}
                                                 </span>
                                                 @if ($step->note)
-                                                <div class="text-muted fst-italic mt-1" style="font-size:11px">
-                                                    "{{ $step->note }}"
+                                                <div class="text-muted mt-1" style="font-size:11px">
+                                                    Note : "{{ $step->note }}"
                                                 </div>
                                                 @endif
                                                 @if ($step->revisi)
@@ -360,7 +384,7 @@ new class extends Component
                                         ->contains(fn ($item) => $item->status === 'revisi');
 
                                         $canEdit =
-                                        in_array($step->status, ['pending', 'waiting']) &&
+                                        in_array($step->status, ['unprocessed', 'onprocess']) &&
                                         !$hasPreviousRevisi;
                                         @endphp
                                         @if ($editingStepId == $step->document_route_id)
@@ -369,8 +393,8 @@ new class extends Component
                                             <div class="mb-2">
                                                 <label class="form-label mb-1" style="font-size:11px; font-weight:600;">Status</label>
                                                 <select wire:model="editStatus" class="form-select form-select-sm">
-                                                    <option value="pending">Pending</option>
-                                                    <option value="waiting">Waiting</option>
+                                                    <option value="unprocessed">Unprocessed</option>
+                                                    <option value="onprocess">Onprocess</option>
                                                     <option value="approved">Approved</option>
                                                     <option value="revisi">Revisi</option>
                                                     <option value="hilang">Hilang</option>

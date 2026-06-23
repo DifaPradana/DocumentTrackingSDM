@@ -60,9 +60,6 @@ new class extends Component
                             <i class="ti ti-file-text me-2"></i>Dokumen
                         </h5>
                     </div>
-                    <button wire:click="$dispatch('open-create-document')" class="btn btn-primary">
-                        <i class="ti ti-plus me-1"></i> Ajukan Dokumen
-                    </button>
                 </div>
                 <br>
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -108,8 +105,8 @@ new class extends Component
                                 ?? ['bg-secondary-subtle text-secondary-emphasis', ucfirst($doc->priority)];
 
                                 $statusMap = [
-                                'pending' => ['bg-warning-subtle text-warning-emphasis', 'Pending'],
-                                'waiting' => ['bg-primary-subtle text-primary-emphasis', 'Waiting'],
+                                'unprocessed' => ['bg-warning-subtle text-warning-emphasis', 'Unprocessed'],
+                                'onprocess' => ['bg-primary-subtle text-primary-emphasis', 'Onprocess'],
                                 'revisi' => ['bg-info-subtle text-info-emphasis', 'Revisi'],
                                 'approved' => ['bg-success-subtle text-success-emphasis', 'Approved'],
                                 'selesai' => ['bg-success-subtle text-success-emphasis', 'Selesai'],
@@ -229,8 +226,9 @@ new class extends Component
                                 'rejected' => 'danger',
                                 'revisi' => 'warning',
                                 'hilang' => 'dark',
-                                'waiting' => 'primary',
-                                'pending' => 'warning',
+                                'onprocess' => 'primary',
+                                'unprocessed' => 'warning',
+                                'none' => 'secondary',
                                 default => 'secondary',
                                 };
                                 $badgeClass = match($step->status) {
@@ -238,8 +236,9 @@ new class extends Component
                                 'rejected' => 'bg-danger-subtle text-danger-emphasis',
                                 'revisi' => 'bg-danger-subtle text-danger-emphasis',
                                 'hilang' => 'bg-dark-subtle text-dark-emphasis',
-                                'waiting' => 'bg-primary-subtle text-primary-emphasis',
-                                'pending' => 'bg-warning-subtle text-warning-emphasis',
+                                'onprocess' => 'bg-primary-subtle text-primary-emphasis',
+                                'unprocessed' => 'bg-warning-subtle text-warning-emphasis',
+                                'none' => 'bg-secondary-subtle text-secondary-emphasis',
                                 default => 'bg-secondary-subtle text-secondary-emphasis',
                                 };
                                 $statusLabel = match($step->status) {
@@ -247,8 +246,8 @@ new class extends Component
                                 'rejected' => 'Rejected',
                                 'revisi' => 'Revisi',
                                 'hilang' => 'Hilang',
-                                'waiting' => 'Waiting',
-                                'pending' => 'Pending',
+                                'onprocess' => 'Onprocess',
+                                'none' => 'None',
                                 default => ucfirst($step->status),
                                 };
                                 $statusIcon = match($step->status) {
@@ -271,8 +270,20 @@ new class extends Component
                                             {{ $statusLabel }}
                                         </span>
                                         @if ($step->note)
-                                        <div class="text-muted fst-italic mt-1" style="font-size:11px">
-                                            "{{ $step->note }}"
+                                        <div class="text-muted mt-1" style="font-size:11px">
+                                            Note : "{{ $step->note }}"
+                                        </div>
+                                        @endif
+                                        @if ($step->kapan_onprocess)
+                                        <div class="text-muted mt-1" style="font-size:11px">
+                                            Onprocess at
+                                            {{ \Carbon\Carbon::parse($step->kapan_onprocess)->translatedFormat('H:i l, d F Y') }}
+                                        </div>
+                                        @endif
+                                        @if ($step->kapan_approved)
+                                        <div class="text-muted mt-1" style="font-size:11px">
+                                            Approved at
+                                            {{ \Carbon\Carbon::parse($step->kapan_approved)->translatedFormat('H:i l, d F Y') }}
                                         </div>
                                         @endif
                                         @if ($step->revisi)

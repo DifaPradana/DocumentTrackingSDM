@@ -5,17 +5,23 @@ use App\Models\Document;
 use App\Models\DocumentRoute;
 use App\Models\User;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
-use Livewire\Attributes\On;
 use Livewire\Component;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
+use Illuminate\Support\Str;
+use Livewire\Attributes\On;
+use Livewire\WithFileUploads;
+
 
 new class extends Component
 {
-    public $showModal = false;
+    use WithFileUploads;
 
+    public $showModal = false;
     public $karyawan_nonoffice = [];
     public $departement = [];
     public $selectedDepartements = [''];
-
+    public $photo_start;
     public $judul_dokumen;
     public $priority;
     public $assigned_to;
@@ -75,6 +81,9 @@ new class extends Component
             'priority.required'      => 'Priority wajib diisi',
             'assigned_to.required'   => 'Wajib pilih karyawan',
             'deadline.required'      => 'Deadline harus diisi',
+            'photo_start.required'   => 'Harus upload photo/pdf dokumen, cover saja tidak apa-apa',
+            'photo_start.mimes'      => 'Harus berupa photo/pdf',
+            'photo_start.max'        => 'Ukuran maksimal 10 MB',
         ];
 
         $this->validate([
@@ -88,15 +97,56 @@ new class extends Component
                 }
             }],
             'deadline' => 'required',
+            'photo_start' => 'required|file|mimes:jpeg,jpg,png,pdf|max:1024'
+
         ], $message);
+
+        if ($this->photo_start) {
+
+            $uploadedFile = $this->photo_start;
+
+            $filename = Str::uuid() . '.' . $uploadedFile->extension();
+            $relativePath = 'pengajuan-dokumen/' . $filename;
+            $fullPath = storage_path('app/public/' . $relativePath);
+
+            if (!is_dir(dirname($fullPath))) {
+                mkdir(dirname($fullPath), 0755, true);
+            }
+
+            $mimeType = $uploadedFile->getMimeType();
+
+            if (str_starts_with($mimeType, 'image/')) {
+
+                $manager = ImageManager::usingDriver(Driver::class);
+
+                $image = $manager->decodeSplFileInfo($uploadedFile);
+
+                // resize hanya jika lebih besar dari 1200px
+                if ($image->width() > 1200) {
+                    $image->scale(width: 1200);
+                }
+
+                $image->save($fullPath, quality: 70);
+            } else {
+
+                // PDF atau file lain langsung simpan
+                copy(
+                    $uploadedFile->getRealPath(),
+                    $fullPath
+                );
+            }
+
+            $dokumenPath = $relativePath;
+        }
 
         $document = Document::create([
             'judul_dokumen'  => strtolower($this->judul_dokumen),
             'priority'       => $this->priority,
             'assigned_to'    => $this->assigned_to,
             'created_by'     => auth()->id(),
-            'current_status' => 'pending',
+            'current_status' => 'unprocessed',
             'deadline'       => $this->deadline,
+            'photo_start'    => $dokumenPath,
         ]);
 
         $departements = array_values(array_filter($this->selectedDepartements));
@@ -107,7 +157,7 @@ new class extends Component
                 'departement_id' => $departement_id,
                 'urutan'         => $index + 1,
                 'revision'       => 1,
-                'status'         => 'pending',
+                'status'         => $index === 0 ? 'unprocessed' : 'none',
             ]);
         }
 
@@ -252,7 +302,16 @@ new class extends Component
                             <small class="text-danger">{{ $message }}</small>
                             @enderror
                         </div>
-
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Foto Dokumen
+                            </label>
+                            <input type="file" wire:model="photo_start" accept="image/*, .pdf" capture="user" class="form-control" id="photo_start">
+                            <div wire:loading wire:target="photo_start" class="text-primary mt-2">
+                                <span class="spinner-border spinner-border-sm"></span>
+                                Uploading...
+                            </div>
+                        </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary"
                                 wire:click="closeModal">Batal</button>

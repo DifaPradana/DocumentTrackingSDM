@@ -16,7 +16,9 @@ class Document extends Model
         'created_by',
         'assigned_to',
         'current_departement_id',
-        'deadline'
+        'deadline',
+        'photo_start',
+        'pohoto_done'
     ];
 
     protected $casts = [

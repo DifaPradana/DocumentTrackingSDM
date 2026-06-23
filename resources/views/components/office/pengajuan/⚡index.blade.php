@@ -92,13 +92,14 @@ new class extends Component
             <livewire:office.pengajuan.create-pengajuan />
             <livewire:office.pengajuan.edit-pengajuan />
             <livewire:office.pengajuan.handle-revisi />
+            <livewire:office.pengajuan.handle-hilang />
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr class="text-center align-middle">
                             <th class="small text-muted fw-semibold">Judul</th>
-                            <th class="small text-muted fw-semibold">Pengaju</th>
-                            <th class="small text-muted fw-semibold">Ditugaskan ke</th>
+                            <th class="small text-muted fw-semibold">PIC</th>
+                            <th class="small text-muted fw-semibold">Router</th>
                             <th class="small text-muted fw-semibold">Prioritas</th>
                             <th class="small text-muted fw-semibold">Status</th>
                             <th class="small text-muted fw-semibold">Dibuat</th>
@@ -128,8 +129,9 @@ new class extends Component
                             <td>
                                 @php
                                 $statusMap = [
-                                'pending' => ['bg-warning-subtle text-warning-emphasis', 'Pending'],
-                                'waiting' => ['bg-primary-subtle text-primary-emphasis', 'Waiting'],
+                                'none' => ['bg-dark-subtle text-dark-emphasis', 'None'],
+                                'onprocess' => ['bg-primary-subtle text-primary-emphasis', 'Onprocess'],
+                                'unprocessed' => ['bg-warning-subtle text-warning-emphasis', 'Unprocessed'],
                                 'selesai' => ['bg-success-subtle text-success-emphasis', 'Selesai'],
                                 'revisi' => ['bg-danger-subtle text-danger-emphasis', 'Revisi'],
                                 'hilang' => ['bg-dark-subtle text-dark-emphasis', 'Hilang'],
@@ -145,6 +147,7 @@ new class extends Component
                                 <span class="small text-muted">{{ $doc->deadline->format('d M Y') }}</span>
                             </td>
                             <td class="border px-4 py-3 text-center text-black">
+                                @if ($doc->current_status != 'selesai')
                                 <button
                                     type="button"
                                     wire:click="editDokumen({{ $doc->document_id }})"
@@ -159,7 +162,6 @@ new class extends Component
                                         <span class="spinner-border spinner-border-sm" role="status"></span>
                                     </span>
                                 </button>
-                                @if ($doc->status != 'selesai')
                                 <button
                                     onclick="confirm('Kamu akan menghapus dokumen {{ $doc->judul_dokumen }} secara permanen, apakah yakin?') || event.stopImmediatePropagation()"
                                     wire:click="delete({{ $doc->document_id }})"
@@ -175,11 +177,19 @@ new class extends Component
                                     <i class="ti ti-refresh"></i>
                                 </button>
                                 @endif
+                                @if ($doc->current_status == 'hilang')
+                                <button
+                                    type="button"
+                                    wire:click="$dispatch('open-handle-hilang', { document_id: {{ $doc->document_id }} })"
+                                    class="btn btn-info m-1">
+                                    <i class="ti ti-refresh"></i>
+                                </button>
+                                @endif
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
+                            <td colspan="8" class="text-center text-muted py-4">
                                 <i class="ti ti-inbox fs-4 d-block mb-1"></i>
                                 Belum ada dokumen
                             </td>

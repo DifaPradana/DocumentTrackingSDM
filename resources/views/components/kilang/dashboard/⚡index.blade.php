@@ -17,12 +17,12 @@ new class extends Component
         $startOfMonth = now()->startOfMonth();
 
         return [
-            'totalUnprocessed' => Document::query()
+            'totalProcessed' => Document::query()
                 ->whereHas('assignee')
                 ->where('current_status', 'pending')
                 ->where('created_at', '>=', now()->subMonth())
                 ->count(),
-            'totalProcessed' => Document::query()
+            'totalUnprocessed' => Document::query()
                 ->whereHas('assignee')
                 ->where('current_status', 'waiting')
                 ->where('created_at', '>=', now()->subMonth())
@@ -108,5 +108,5 @@ new class extends Component
             </div>
         </div>
     </div>
-    <livewire:office.dashboard.show-recent-document />
+    <livewire:kilang.dashboard.show-recent-unfinished />
 </div>
