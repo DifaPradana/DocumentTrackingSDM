@@ -6,6 +6,9 @@ use App\Models\User;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
+use Illuminate\Support\Str;
 
 new class extends Component
 {
@@ -163,7 +166,43 @@ new class extends Component
             'pengantar_user_id.required' => 'Pengantar wajib dipilih.',
         ]);
 
-        $path = $this->photo_done->store('bukti-dokumen', 'public');
+        if ($this->photo_done) {
+
+            $uploadedFile = $this->photo_done;
+
+            $filename = Str::uuid() . '.' . $uploadedFile->extension();
+            $relativePath = 'bukti-dokumen/' . $filename;
+            $fullPath = storage_path('app/public/' . $relativePath);
+
+            if (!is_dir(dirname($fullPath))) {
+                mkdir(dirname($fullPath), 0755, true);
+            }
+
+            $mimeType = $uploadedFile->getMimeType();
+
+            if (str_starts_with($mimeType, 'image/')) {
+
+                $manager = ImageManager::usingDriver(Driver::class);
+
+                $image = $manager->decodeSplFileInfo($uploadedFile);
+
+                // resize hanya jika lebih besar dari 1200px
+                if ($image->width() > 1200) {
+                    $image->scale(width: 1200);
+                }
+
+                $image->save($fullPath, quality: 70);
+            } else {
+
+                // PDF atau file lain langsung simpan
+                copy(
+                    $uploadedFile->getRealPath(),
+                    $fullPath
+                );
+            }
+
+            $path = $relativePath;
+        }
 
         Document::findOrFail($this->pendingDocumentId)->update([
             'current_status' => 'done',
@@ -592,8 +631,8 @@ new class extends Component
                                             <label class="form-label">
                                                 Foto Dokumen
                                             </label>
-                                            <input type="file" wire:model="photo_start" accept="image/*, .pdf" capture="user" class="form-control" id="photo_start">
-                                            <div wire:loading wire:target="photo_start" class="text-primary mt-2">
+                                            <input type="file" wire:model="photo_done" accept="image/*, .pdf" capture="user" class="form-control" id="photo_done">
+                                            <div wire:loading wire:target="photo_done" class="text-primary mt-2">
                                                 <span class="spinner-border spinner-border-sm"></span>
                                                 Uploading...
                                             </div>
