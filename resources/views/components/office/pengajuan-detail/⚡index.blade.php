@@ -50,7 +50,7 @@ new class extends Component
 };
 ?>
 
-<div class="col-lg-12 d-flex align-items-stretch mt-4">
+<div wire:poll.30s class="col-lg-12 d-flex align-items-stretch mt-4">
     <div class="card w-100">
         <div class="card-body p-4">
             <div class="card-header bg-white border-0 py-3">

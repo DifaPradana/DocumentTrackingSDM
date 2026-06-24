@@ -43,7 +43,7 @@ new class extends Component
 ?>
 
 <div>
-    <div class="col-lg-12 d-flex align-items-stretch">
+    <div wire:poll.30s class="col-lg-12 d-flex align-items-stretch">
         <div class="card w-100">
             <div class="card-body p-4">
                 <div class="d-flex align-items-center gap-2 mb-4">
