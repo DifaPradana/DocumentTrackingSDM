@@ -92,7 +92,7 @@
                     <span class="hide-menu">Section Head</span>
                 </li>
                 <li class="sidebar-item">
-                    <a class="sidebar-link" href="{{ route('office.pengajuan.page') }}" aria-expanded="false">
+                    <a class="sidebar-link" href="{{ route('office.section-head.page') }}" aria-expanded="false">
                         <span>
                             <i class="ti ti-users"></i>
                         </span>
@@ -122,6 +122,19 @@
                             <i class="ti ti-checklist"></i>
                         </span>
                         <span class="hide-menu">Task</span>
+                    </a>
+                </li>
+
+                <li class="nav-small-cap">
+                    <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+                    <span class="hide-menu">Section Head</span>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="{{ route('adm.section-head.page') }}" aria-expanded="false">
+                        <span>
+                            <i class="ti ti-users"></i>
+                        </span>
+                        <span class="hide-menu">List Section Head</span>
                     </a>
                 </li>
                 @endif

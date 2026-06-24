@@ -15,6 +15,7 @@ new class extends Component
     }
 
     use WithPagination;
+    protected $paginationTheme = 'bootstrap';
     public $perPage = 20;
     public $search = '';
 
@@ -30,7 +31,7 @@ new class extends Component
                     $q->where('judul_dokumen', 'like', "%{$this->search}%")
                 )
                 ->latest()
-                ->paginate($this->perPage), // ← bukan take()->get()
+                ->paginate($this->perPage),
         ];
     }
 
@@ -212,7 +213,7 @@ new class extends Component
                         </select>
                     </div>
                 </div>
-                {{ $recentDocuments->links() }}
+                {{ $recentDocuments->links('livewire::bootstrap') }}
             </div>
         </div>
     </div>

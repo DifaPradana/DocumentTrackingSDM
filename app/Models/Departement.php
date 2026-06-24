@@ -17,6 +17,11 @@ class Departement extends Model
         return $this->hasMany(DocumentRoute::class, 'document_route_id', 'document_route_id');
     }
 
+    public function sectionHead()
+    {
+        return $this->hasOne(SectionHead::class, 'departement_id', 'departement_id');
+    }
+
     public function scopeSearch($query, $search)
     {
         return $query->where('nama_departement', 'like', '%' . $search . '%');

@@ -20,11 +20,13 @@ Route::group(['middleware' => ['auth', 'role:Office'], 'prefix' => 'office'], fu
     Route::livewire('/dashboard', 'office.dashboard.index')->name('office.dashboard.page');
     Route::livewire('/document', 'office.pengajuan.index')->name('office.pengajuan.page');
     Route::livewire('/document-status', 'office.pengajuan-detail.index')->name('office.pengajuan-detail.page');
+    Route::livewire('/section-head', 'office.section-head.index')->name('office.section-head.page');
 });
 
 Route::group(['middleware' => ['auth', 'role:ADM Kilang'], 'prefix' => 'adm-kilang'], function () {
     Route::livewire('/dashboard', 'kilang.dashboard.index')->name('adm.dashboard.page');
     Route::livewire('/task', 'kilang.task.index')->name('adm.task.page');
+    Route::livewire('/section-head', 'kilang.section-head.index')->name('adm.section-head.page');
 });
 
 require __DIR__ . '/settings.php';

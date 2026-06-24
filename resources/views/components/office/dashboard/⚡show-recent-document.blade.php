@@ -92,9 +92,74 @@ new class extends Component
                                 </button>
                             </td>
                         </tr>
+                        <div
+                            class="modal fade"
+                            id="modalDokumen{{ $doc->document_id }}"
+                            tabindex="-1"
+                            aria-hidden="true"
+                            wire:ignore.self>
+
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content">
+
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">
+                                            Dokumen {{ ucwords($doc->judul_dokumen) }}
+                                        </h5>
+
+                                        <button
+                                            type="button"
+                                            class="btn-close"
+                                            onclick="hideModal('modalDokumen{{ $doc->document_id }}')">
+                                        </button>
+                                    </div>
+
+                                    <div class="modal-body text-center">
+
+                                        @php
+                                        $ext = strtolower(pathinfo($doc->photo_start, PATHINFO_EXTENSION));
+                                        @endphp
+
+                                        @if(in_array($ext, ['jpg','jpeg','png','webp']))
+                                        <img
+                                            src="{{ asset('storage/'.$doc->photo_start) }}"
+                                            class="img-fluid rounded">
+                                        @elseif($ext === 'pdf')
+                                        <iframe
+                                            src="{{ asset('storage/'.$doc->photo_start) }}"
+                                            width="100%"
+                                            height="600">
+                                        </iframe>
+                                        @else
+                                        <a
+                                            href="{{ asset('storage/'.$doc->photo_start) }}"
+                                            target="_blank"
+                                            class="btn btn-primary">
+
+                                            Download Dokumen
+
+                                        </a>
+                                        @endif
+
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <button
+                                            type="button"
+                                            class="btn btn-secondary"
+                                            onclick="hideModal('modalDokumen{{ $doc->document_id }}')">
+
+                                            Tutup
+
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
+                            <td colspan="8" class="text-center text-muted py-4">
                                 <i class="ti ti-inbox fs-4 d-block mb-1"></i>
                                 Belum ada dokumen
                             </td>
@@ -102,71 +167,6 @@ new class extends Component
                         @endforelse
                     </tbody>
                 </table>
-            </div>
-            <div
-                class="modal fade"
-                id="modalDokumen{{ $doc->document_id }}"
-                tabindex="-1"
-                aria-hidden="true"
-                wire:ignore.self>
-
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content">
-
-                        <div class="modal-header">
-                            <h5 class="modal-title">
-                                Dokumen {{ ucwords($doc->judul_dokumen) }}
-                            </h5>
-
-                            <button
-                                type="button"
-                                class="btn-close"
-                                onclick="hideModal('modalDokumen{{ $doc->document_id }}')">
-                            </button>
-                        </div>
-
-                        <div class="modal-body text-center">
-
-                            @php
-                            $ext = strtolower(pathinfo($doc->photo_start, PATHINFO_EXTENSION));
-                            @endphp
-
-                            @if(in_array($ext, ['jpg','jpeg','png','webp']))
-                            <img
-                                src="{{ asset('storage/'.$doc->photo_start) }}"
-                                class="img-fluid rounded">
-                            @elseif($ext === 'pdf')
-                            <iframe
-                                src="{{ asset('storage/'.$doc->photo_start) }}"
-                                width="100%"
-                                height="600">
-                            </iframe>
-                            @else
-                            <a
-                                href="{{ asset('storage/'.$doc->photo_start) }}"
-                                target="_blank"
-                                class="btn btn-primary">
-
-                                Download Dokumen
-
-                            </a>
-                            @endif
-
-                        </div>
-
-                        <div class="modal-footer">
-                            <button
-                                type="button"
-                                class="btn btn-secondary"
-                                onclick="hideModal('modalDokumen{{ $doc->document_id }}')">
-
-                                Tutup
-
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
             </div>
         </div>
     </div>
