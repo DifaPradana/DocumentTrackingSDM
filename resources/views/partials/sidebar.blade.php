@@ -99,6 +99,7 @@
                         <span class="hide-menu">List Section Head</span>
                     </a>
                 </li>
+
                 @elseif (auth()->user()->role_id == '3')
                 <li class="nav-small-cap">
                     <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
@@ -138,6 +139,18 @@
                     </a>
                 </li>
                 @endif
+                <li class="nav-small-cap">
+                    <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+                    <span class="hide-menu">Profile</span>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="{{route('public.profile.page')}}" aria-expanded="false">
+                        <span>
+                            <i class="ti ti-user"></i>
+                        </span>
+                        <span class="hide-menu">Profile</span>
+                    </a>
+                </li>
 
                 <li class="nav-small-cap">
                     <i class="ti ti-dots nav-small-cap-icon fs-4"></i>

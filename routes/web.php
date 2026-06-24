@@ -29,4 +29,7 @@ Route::group(['middleware' => ['auth', 'role:ADM Kilang'], 'prefix' => 'adm-kila
     Route::livewire('/section-head', 'kilang.section-head.index')->name('adm.section-head.page');
 });
 
+Route::group(['middleware' => ['auth']], function () {
+    Route::livewire('/profile', 'public.profile')->name('public.profile.page');
+});
 require __DIR__ . '/settings.php';

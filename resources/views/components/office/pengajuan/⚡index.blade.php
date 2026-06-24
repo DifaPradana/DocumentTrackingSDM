@@ -105,11 +105,69 @@ new class extends Component
                             <th class="small text-muted fw-semibold">Status</th>
                             <th class="small text-muted fw-semibold">Dibuat</th>
                             <th class="small text-muted fw-semibold">Deadline</th>
+                            <th class="small text-muted fw-semibold">Bukti Selesai</th>
+                            <th class="small text-muted fw-semibold">Pengantar</th>
                             <th class="small text-muted fw-semibold">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($recentDocuments as $doc)
+                        {{-- Modal Dokumen --}}
+                        @if($doc->photo_done)
+                        <div
+                            class="modal fade"
+                            id="modalDokumen{{ $doc->document_id }}"
+                            tabindex="-1"
+                            aria-hidden="true"
+                            wire:ignore.self>
+
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content">
+
+                                    <div class="modal-body text-center">
+
+                                        @php
+                                        $ext = strtolower(pathinfo($doc->photo_done, PATHINFO_EXTENSION));
+                                        @endphp
+
+                                        @if(in_array($ext, ['jpg','jpeg','png','webp']))
+                                        <img
+                                            src="{{ asset('storage/'.$doc->photo_done) }}"
+                                            class="img-fluid rounded">
+                                        @elseif($ext === 'pdf')
+                                        <iframe
+                                            src="{{ asset('storage/'.$doc->photo_done) }}"
+                                            width="100%"
+                                            height="600">
+                                        </iframe>
+                                        @else
+                                        <a
+                                            href="{{ asset('storage/'.$doc->photo_done) }}"
+                                            target="_blank"
+                                            class="btn btn-primary">
+
+                                            Download Dokumen
+
+                                        </a>
+                                        @endif
+
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <button
+                                            type="button"
+                                            class="btn btn-secondary"
+                                            data-bs-dismiss="modal">
+
+                                            Tutup
+
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                         <tr class="text-center align-middle">
                             <td>
                                 <span class="fw-medium">{{ ucwords($doc->judul_dokumen) }}</span>
@@ -133,7 +191,7 @@ new class extends Component
                                 'none' => ['bg-dark-subtle text-dark-emphasis', 'None'],
                                 'onprocess' => ['bg-primary-subtle text-primary-emphasis', 'Onprocess'],
                                 'unprocessed' => ['bg-warning-subtle text-warning-emphasis', 'Unprocessed'],
-                                'selesai' => ['bg-success-subtle text-success-emphasis', 'Selesai'],
+                                'done' => ['bg-success-subtle text-success-emphasis', 'Done'],
                                 'revisi' => ['bg-danger-subtle text-danger-emphasis', 'Revisi'],
                                 'hilang' => ['bg-dark-subtle text-dark-emphasis', 'Hilang'],
                                 ];
@@ -147,8 +205,22 @@ new class extends Component
                             <td>
                                 <span class="small text-muted">{{ $doc->deadline->format('d M Y') }}</span>
                             </td>
+                            <td>
+                                @if($doc->photo_done)
+                                <div>
+                                    <button
+                                        type="button"
+                                        class="btn btn-primary btn-sm"
+                                        data-bs-toggle="modal" data-bs-target="#modalDokumen{{ $doc->document_id }}">
+                                        <i class="ti ti-eye"></i>
+                                        Lihat Dokumen
+                                    </button>
+                                </div>
+                                @endif
+                            </td>
+                            <td>{{ ucwords($doc->pengantar->nama_karyawan ?? '-') }}</td>
                             <td class="border px-4 py-3 text-center text-black">
-                                @if ($doc->current_status != 'selesai')
+                                @if ($doc->current_status != 'done')
                                 <button
                                     type="button"
                                     wire:click="editDokumen({{ $doc->document_id }})"
@@ -240,7 +312,7 @@ new class extends Component
             });
         });
 
-        // Fix overlay gelap: cleanup setiap kali modal selesai ditutup
+        // Fix overlay gelap: cleanup setiap kali modal done ditutup
         document.getElementById('editDocumentModal').addEventListener('hidden.bs.modal', () => {
             document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
             document.body.classList.remove('modal-open');

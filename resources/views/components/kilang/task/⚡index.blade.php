@@ -2,17 +2,28 @@
 
 use App\Models\Document;
 use App\Models\DocumentRoute;
+use App\Models\User;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 new class extends Component
 {
 
-    use WithPagination;
+    use WithPagination, WithFileUploads;
     public $perPage = 20;
     public $search = '';
-
+    public $photo_revisi;
+    public $photo_done;
     public $selectedDocumentId = null;
+    public $editingStepId = null;
+    public $editStatus = '';
+    public $editNote = '';
+    public $pengantar_user_id;
+    public $showDoneModal = false;
+    public $pendingDocumentId = null;
+    public $pendingStepId = null;
+
 
     public function lihatProgress($documentId)
     {
@@ -35,7 +46,7 @@ new class extends Component
                         fn($q) =>
                         $q->where('judul_dokumen', 'like', "%{$this->search}%")
                     )
-                    ->where('current_status', '!=', 'selesai')
+                    ->where('current_status', '!=', 'done')
                     ->latest()
                     ->paginate($this->perPage),
 
@@ -44,15 +55,14 @@ new class extends Component
                         'documentRoute' => fn($q) => $q->orderBy('urutan')->with('departement'),
                     ])->find($this->selectedDocumentId)
                     : null,
+
+                'pengantarUsers' => User::whereHas('role', function ($q) {
+                    $q->where('nama_role', 'Pengantar');
+                })->get(),
             ])
             ->layout('layouts.main')
             ->title('DocTracker | Task');
     }
-
-    // Properti untuk edit
-    public $editingStepId = null;
-    public $editStatus = '';
-    public $editNote = '';
 
     public function bukaEditStatus($stepId)
     {
@@ -115,10 +125,17 @@ new class extends Component
                     'current_status' => 'unprocessed'
                 ]);
             } else {
-                // Tidak ada step lagi → dokumen selesai
-                $document->update([
-                    'current_status' => 'done'
-                ]);
+                $this->pendingDocumentId = $document->document_id;
+                $this->pendingStepId     = $step->document_route_id;
+
+                // Reset edit form dulu
+                $this->editingStepId = null;
+                $this->editStatus    = '';
+                $this->editNote      = '';
+
+                // Buka modal SETELAH reset, jangan pakai batalEditStatus() karena itu tutup modal
+                $this->showDoneModal = true;
+                return;
             }
         } elseif ($this->editStatus === 'revisi') {
             $document->update([
@@ -131,6 +148,47 @@ new class extends Component
         $docId = $this->selectedDocumentId;
         $this->selectedDocumentId = null;
         $this->selectedDocumentId = $docId;
+    }
+
+
+    public function simpanDoneModal()
+    {
+        $this->validate([
+            'photo_done'        => 'required|image|max:5120',
+            'pengantar_user_id' => 'required|exists:users,user_id',
+        ], [
+            'photo_done.required'        => 'Foto bukti wajib diupload.',
+            'photo_done.image'           => 'File harus berupa gambar.',
+            'photo_done.max'             => 'Ukuran foto maksimal 5MB.',
+            'pengantar_user_id.required' => 'Pengantar wajib dipilih.',
+        ]);
+
+        $path = $this->photo_done->store('bukti-dokumen', 'public');
+
+        Document::findOrFail($this->pendingDocumentId)->update([
+            'current_status' => 'done',
+            'photo_done'     => $path,
+            'pengantar_id'   => $this->pengantar_user_id,
+        ]);
+
+        $this->showDoneModal     = false;
+        $this->photo_done        = null;
+        $this->pengantar_user_id = null;
+        $this->pendingDocumentId = null;
+        $this->pendingStepId     = null;
+
+        $docId = $this->selectedDocumentId;
+        $this->selectedDocumentId = null;
+        $this->selectedDocumentId = $docId;
+    }
+
+    public function tutupDoneModal()
+    {
+        $this->showDoneModal    = false;
+        $this->photo_done       = null;
+        $this->pengantar_user_id = null;
+        $this->pendingDocumentId = null;
+        $this->pendingStepId    = null;
     }
 };
 ?>
@@ -158,6 +216,98 @@ new class extends Component
                 </div>
             </div>
             <br>
+            @if ($showDoneModal)
+            <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.45); z-index:1055;">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+
+                        <div class="modal-header border-0 px-4 pt-4 pb-0">
+                            <div>
+                                <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-2" style="font-size:12px">
+                                    <i class="ti ti-circle-check me-1"></i>Dokumen Selesai
+                                </span>
+                                <p class="text-muted mb-0 mt-1" style="font-size:12px">
+                                    Upload foto bukti serah terima dan pilih pengantar untuk menyelesaikan dokumen ini.
+                                </p>
+                            </div>
+                            <button type="button" wire:click="tutupDoneModal" class="btn-close ms-auto flex-shrink-0"></button>
+                        </div>
+
+                        <div class="modal-body px-4 py-3">
+
+                            {{-- Upload Foto Done --}}
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" style="font-size:12px">
+                                    <i class="ti ti-camera me-1"></i>Foto Bukti Selesai <span class="text-danger">*</span>
+                                </label>
+                                <label for="photoDoneInput"
+                                    class="d-block border rounded-3 text-center p-3"
+                                    style="cursor:pointer; border-style:dashed !important; border-color:#dee2e6; background:#f8f9fa;">
+
+                                    @if ($photo_done)
+                                    <img src="{{ $photo_done->temporaryUrl() }}"
+                                        class="img-fluid rounded-2 shadow-sm mb-1"
+                                        style="max-height:150px; object-fit:cover;">
+                                    <p class="text-success mb-0" style="font-size:11px">
+                                        <i class="ti ti-check me-1"></i>{{ $photo_done->getClientOriginalName() }}
+                                    </p>
+                                    @else
+                                    <i class="ti ti-cloud-upload text-muted" style="font-size:2rem"></i>
+                                    <p class="mb-0 text-muted mt-1" style="font-size:12px">Klik untuk pilih foto</p>
+                                    <p class="mb-0 text-muted" style="font-size:10px">PNG, JPG, JPEG · Maks 5MB</p>
+                                    @endif
+
+                                    <input id="photoDoneInput" type="file" wire:model="photo_done" accept="image/*" class="d-none">
+                                </label>
+
+                                <div wire:loading wire:target="photo_done" class="mt-1 text-primary" style="font-size:11px">
+                                    <i class="ti ti-loader-2 me-1"></i>Mengupload foto...
+                                </div>
+                                @error('photo_done')
+                                <div class="text-danger mt-1" style="font-size:11px">
+                                    <i class="ti ti-alert-circle me-1"></i>{{ $message }}
+                                </div>
+                                @enderror
+                            </div>
+
+                            {{-- Pilih Pengantar --}}
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="font-size:12px">
+                                    <i class="ti ti-user-check me-1"></i>Pengantar <span class="text-danger">*</span>
+                                </label>
+                                <select wire:model="pengantar_user_id" class="form-select form-select-sm">
+                                    <option value="">-- Pilih Pengantar --</option>
+                                    @foreach ($pengantarUsers as $u)
+                                    <option value="{{ $u->user_id }}">{{ $u->nama_karyawan }}</option>
+                                    @endforeach
+                                </select>
+                                @error('pengantar_user_id')
+                                <div class="text-danger mt-1" style="font-size:11px">
+                                    <i class="ti ti-alert-circle me-1"></i>{{ $message }}
+                                </div>
+                                @enderror
+                            </div>
+
+                        </div>
+
+                        <div class="modal-footer border-0 px-4 pb-4 pt-2 gap-2">
+                            <button type="button" wire:click="simpanDoneModal"
+                                class="btn btn-sm btn-success"
+                                wire:loading.attr="disabled"
+                                wire:target="simpanDoneModal">
+                                <span wire:loading.remove wire:target="simpanDoneModal">
+                                    <i class="ti ti-check me-1"></i>Selesaikan Dokumen
+                                </span>
+                                <span wire:loading wire:target="simpanDoneModal">
+                                    <i class="ti ti-loader-2 me-1"></i>Menyimpan...
+                                </span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            @endif
             <div class="row g-3">
                 {{-- Tabel --}}
                 <div class="{{ $selectedDocument ? 'col-lg-7' : 'col-12' }}">
@@ -315,7 +465,6 @@ new class extends Component
 
                         <div class="card-body overflow-auto" style="max-height: 480px">
                             <ul class="timeline-widget mb-0 position-relative mb-n5">
-
                                 @foreach ($steps as $index => $step)
                                 @php
                                 $bulletColor = match($step->status) {
@@ -347,6 +496,9 @@ new class extends Component
                                 default => ucfirst($step->status),
                                 };
 
+                                @endphp
+                                @php
+                                $isLastStep = $step->urutan == $steps->max('urutan');
                                 @endphp
                                 <li wire:key="step-{{ $step->document_route_id }}" class="timeline-item d-flex position-relative overflow-hidden">
                                     <div class="timeline-badge-wrap d-flex flex-column align-items-center">
@@ -431,6 +583,22 @@ new class extends Component
                                             Edit
                                         </button>
                                         @endif
+                                        @endif
+                                        @if (
+                                        $editStatus === 'revisi' ||
+                                        ($editStatus === 'approved' && $isLastStep)
+                                        )
+                                        <div class="mb-3">
+                                            <label class="form-label">
+                                                Foto Dokumen
+                                            </label>
+                                            <input type="file" wire:model="photo_start" accept="image/*, .pdf" capture="user" class="form-control" id="photo_start">
+                                            <div wire:loading wire:target="photo_start" class="text-primary mt-2">
+                                                <span class="spinner-border spinner-border-sm"></span>
+                                                Uploading...
+                                            </div>
+                                        </div>
+                                        {{-- pilih pengantar --}}
                                         @endif
                                     </div>
                                 </li>

@@ -18,7 +18,8 @@ class Document extends Model
         'current_departement_id',
         'deadline',
         'photo_start',
-        'pohoto_done'
+        'photo_done',
+        'pengantar_id'
     ];
 
     protected $casts = [
@@ -33,6 +34,11 @@ class Document extends Model
     public function assignee()
     {
         return $this->belongsTo(User::class, 'assigned_to', 'user_id');
+    }
+
+    public function pengantar()
+    {
+        return $this->belongsTo(User::class, 'pengantar_id', 'user_id');
     }
 
     public function documentRoute()

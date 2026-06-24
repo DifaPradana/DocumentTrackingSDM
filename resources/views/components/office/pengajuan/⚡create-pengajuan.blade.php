@@ -97,9 +97,10 @@ new class extends Component
                 }
             }],
             'deadline' => 'required',
-            'photo_start' => 'required|file|mimes:jpeg,jpg,png,pdf|max:1024'
+            'photo_start' => 'required|file|mimes:jpeg,jpg,png,pdf|max:10000'
 
         ], $message);
+
 
         if ($this->photo_start) {
 
@@ -311,6 +312,9 @@ new class extends Component
                                 <span class="spinner-border spinner-border-sm"></span>
                                 Uploading...
                             </div>
+                            @error('photo_start')
+                            <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary"

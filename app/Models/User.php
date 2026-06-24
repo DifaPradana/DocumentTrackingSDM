@@ -81,6 +81,11 @@ class User extends Authenticatable
         return $this->hasMany(Document::class, 'document_id', 'document_id');
     }
 
+    public function document()
+    {
+        return $this->hasMany(DocumentRoute::class, 'pengantar_id', 'user_id');
+    }
+
     public function scopeSearch($query, $search)
     {
         return $query->where('nama_karyawan', 'like', '%' . $search . '%');

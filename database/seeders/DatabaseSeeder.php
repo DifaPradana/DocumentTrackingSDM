@@ -31,6 +31,10 @@ class DatabaseSeeder extends Seeder
             'nama_role' => 'ADM Kilang',
         ]);
 
+        Role::create([
+            'nama_role' => 'Pengantar',
+        ]);
+
         User::create([
             'nama_karyawan' => 'admin',
             'password' => '61b838edadbae4df9b75',
@@ -39,14 +43,26 @@ class DatabaseSeeder extends Seeder
 
         User::create([
             'nama_karyawan' => 'difa pradana',
-            'password' => 'dips',
+            'password' => '11111111',
             'role_id' => 2,
         ]);
 
         User::create([
             'nama_karyawan' => 'testcuy',
-            'password' => 'dips',
+            'password' => '22222222',
             'role_id' => 3,
+        ]);
+
+        User::create([
+            'nama_karyawan' => 'Anton Wibawanto',
+            'password' => 'xxxxxxxxxxxxxxxxxxxxxxxxxx',
+            'role_id' => 4,
+        ]);
+
+        User::create([
+            'nama_karyawan' => 'Aris',
+            'password' => 'dips',
+            'role_id' => 4,
         ]);
 
         Departement::create([
@@ -146,9 +162,6 @@ class DatabaseSeeder extends Seeder
         ]);
         Departement::create([
             'nama_departement' => 'GROUP HEAD / SMOM',
-        ]);
-        Departement::create([
-            'nama_departement' => '',
         ]);
     }
 }

@@ -20,7 +20,9 @@ return new class extends Migration
             $table->foreignId('assigned_to')->constrained('users', 'user_id');
             $table->date('deadline');
             $table->string('photo_start');
+            $table->string('photo_revisi')->nullable();
             $table->string('photo_done')->nullable();
+            $table->foreignId('pengantar_id')->nullable()->constrained('users', 'user_id');
             $table->timestamps();
         });
     }

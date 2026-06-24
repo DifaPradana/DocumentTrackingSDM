@@ -44,18 +44,31 @@ new class extends Component
             'selectedUrutan.required' => 'Pilih step tujuan revisi',
         ]);
 
-
+        // Step tujuan revisi → reset ke unprocessed + null kan timestamp
         DocumentRoute::where('document_id', $this->document_id)
             ->where('urutan', $this->selectedUrutan)
-            ->update(['status' => 'unprocessed', 'note' => null]);
+            ->update([
+                'status' => 'unprocessed',
+                'note' => null,
+                'kapan_onprocess' => null,
+                'kapan_approved' => null,
+            ]);
 
+        // Step setelah tujuan → reset ke none + null kan timestamp
         DocumentRoute::where('document_id', $this->document_id)
             ->where('urutan', '>', $this->selectedUrutan)
-            ->update(['status' => 'none', 'note' => null]);
+            ->update([
+                'status' => 'none',
+                'note' => null,
+                'kapan_onprocess' => null,
+                'kapan_approved' => null,
+            ]);
 
         // Update current_status dokumen
         Document::where('document_id', $this->document_id)
-            ->update(['current_status' => 'unprocessed']);
+            ->update([
+                'current_status' => 'unprocessed',
+            ]);
 
         $this->closeModal();
 

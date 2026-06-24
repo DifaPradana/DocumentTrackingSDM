@@ -107,9 +107,9 @@ new class extends Component
                                 $statusMap = [
                                 'unprocessed' => ['bg-warning-subtle text-warning-emphasis', 'Unprocessed'],
                                 'onprocess' => ['bg-primary-subtle text-primary-emphasis', 'Onprocess'],
-                                'revisi' => ['bg-info-subtle text-info-emphasis', 'Revisi'],
+                                'revisi' => ['bg-danger-subtle text-danger-emphasis', 'Revisi'],
                                 'approved' => ['bg-success-subtle text-success-emphasis', 'Approved'],
-                                'selesai' => ['bg-success-subtle text-success-emphasis', 'Selesai'],
+                                'done' => ['bg-success-subtle text-success-emphasis', 'Done'],
                                 'hilang' => ['bg-dark-subtle text-dark-emphasis', 'Hilang'],
                                 ];
                                 [$statusClass, $statusLabel] = $statusMap[$doc->current_status]
@@ -118,7 +118,7 @@ new class extends Component
                                 $isDeadlineSoon = $doc->deadline &&
                                 $doc->deadline->isFuture() &&
                                 now()->diffInDays($doc->deadline) <= 3 &&
-                                    $doc->current_status !== 'selesai';
+                                    $doc->current_status !== 'done';
                                     @endphp
 
                                     <tr class="{{ $selectedDocumentId == $doc->document_id ? 'table-primary' : '' }}"

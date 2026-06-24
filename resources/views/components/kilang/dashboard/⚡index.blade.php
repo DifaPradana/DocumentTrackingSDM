@@ -19,22 +19,22 @@ new class extends Component
         return [
             'totalProcessed' => Document::query()
                 ->whereHas('assignee')
-                ->where('current_status', 'pending')
+                ->where('current_status', 'onprocess')
                 ->where('created_at', '>=', now()->subMonth())
                 ->count(),
             'totalUnprocessed' => Document::query()
                 ->whereHas('assignee')
-                ->where('current_status', 'waiting')
+                ->where('current_status', 'unprocessed')
                 ->where('created_at', '>=', now()->subMonth())
                 ->count(),
             'totalDone' => Document::query()
                 ->whereHas('assignee')
-                ->where('current_status', 'selesai')
+                ->where('current_status', 'done')
                 ->where('created_at', '>=', $startOfMonth)
                 ->count(),
             'totalNearDeadline' => Document::query()
                 ->whereHas('assignee')
-                ->where('current_status', 'pending')
+                ->where('current_status', 'unprocessed')
                 ->whereDate('deadline', '<=', now()->addDays(3))
                 ->count(),
         ];

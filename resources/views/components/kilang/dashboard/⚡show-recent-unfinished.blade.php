@@ -11,7 +11,7 @@ new class extends Component
             'recentDocuments' => Document::query()
                 ->whereHas('creator')
                 ->with(['creator', 'assignee'])
-                ->where('current_status', '!=', 'selesai')
+                ->where('current_status', '!=', 'done')
                 ->latest()
                 ->take(10)
                 ->get(),
@@ -34,6 +34,7 @@ new class extends Component
                     <thead class="table-light text-center">
                         <tr>
                             <th class="small text-muted fw-semibold">Judul</th>
+                            <th class="small text-muted fw-semibold">Photo Dokumen</th>
                             <th class="small text-muted fw-semibold">PIC</th>
                             <th class="small text-muted fw-semibold">Router</th>
                             <th class="small text-muted fw-semibold">Prioritas</th>
@@ -47,6 +48,19 @@ new class extends Component
                         <tr>
                             <td>
                                 <span class="fw-medium">{{ $doc->judul_dokumen }}</span>
+                            </td>
+                            <td>
+                                @if($doc->photo_start)
+                                <div>
+                                    <button
+                                        type="button"
+                                        class="btn btn-primary btn-sm"
+                                        data-bs-toggle="modal" data-bs-target="#modalDokumen{{ $doc->document_id }}">
+                                        <i class="ti ti-eye"></i>
+                                        Lihat Dokumen
+                                    </button>
+                                </div>
+                                @endif
                             </td>
                             <td>{{ $doc->creator->nama_karyawan ?? '-' }}</td>
                             <td>{{ $doc->assignee->nama_karyawan ?? '-' }}</td>
@@ -83,6 +97,64 @@ new class extends Component
                                 </span>
                             </td>
                         </tr>
+
+                        {{-- Modal Dokumen --}}
+                        @if($doc->photo_start)
+
+                        <div
+                            class="modal fade"
+                            id="modalDokumen{{ $doc->document_id }}"
+                            tabindex="-1"
+                            aria-hidden="true"
+                            wire:ignore.self>
+
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content">
+
+                                    <div class="modal-body text-center">
+
+                                        @php
+                                        $ext = strtolower(pathinfo($doc->photo_start, PATHINFO_EXTENSION));
+                                        @endphp
+
+                                        @if(in_array($ext, ['jpg','jpeg','png','webp']))
+                                        <img
+                                            src="{{ asset('storage/'.$doc->photo_start) }}"
+                                            class="img-fluid rounded">
+                                        @elseif($ext === 'pdf')
+                                        <iframe
+                                            src="{{ asset('storage/'.$doc->photo_start) }}"
+                                            width="100%"
+                                            height="600">
+                                        </iframe>
+                                        @else
+                                        <a
+                                            href="{{ asset('storage/'.$doc->photo_start) }}"
+                                            target="_blank"
+                                            class="btn btn-primary">
+
+                                            Download Dokumen
+
+                                        </a>
+                                        @endif
+
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <button
+                                            type="button"
+                                            class="btn btn-secondary"
+                                            data-bs-dismiss="modal">
+
+                                            Tutup
+
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                         @empty
                         <tr>
                             <td colspan="7" class="text-center text-muted py-4">
