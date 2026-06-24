@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Document;
+use Illuminate\Support\Facades\Storage;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -44,8 +45,10 @@ new class extends Component
     #[On('document-created')]
     public function refreshData() {}
 
-    public function delete(Document $document)
+    public function delete($document)
     {
+        $document = Document::where('document_id', $document)->firstOrFail();
+        Storage::disk('public')->delete($document->photo_start);
         $document->delete();
         LivewireAlert::title('Berhasil')
             ->text('Kamu berhasil delete dokumen')

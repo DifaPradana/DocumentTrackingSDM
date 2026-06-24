@@ -293,7 +293,7 @@ new class extends Component
                                     @else
                                     <i class="ti ti-cloud-upload text-muted" style="font-size:2rem"></i>
                                     <p class="mb-0 text-muted mt-1" style="font-size:12px">Klik untuk pilih foto</p>
-                                    <p class="mb-0 text-muted" style="font-size:10px">PNG, JPG, JPEG · Maks 5MB</p>
+                                    <p class="mb-0 text-muted" style="font-size:10px">PNG, JPG, JPEG · Maks 10 MB</p>
                                     @endif
 
                                     <input id="photoDoneInput" type="file" wire:model="photo_done" accept="image/*" class="d-none">
