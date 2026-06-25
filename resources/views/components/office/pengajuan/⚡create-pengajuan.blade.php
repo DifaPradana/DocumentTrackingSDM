@@ -234,7 +234,7 @@ new class extends Component
                                 <option value="">-- Pilih Karyawan --</option>
                                 @foreach ($karyawan_nonoffice as $nonoffice)
                                 <option value="{{ $nonoffice->user_id }}">
-                                    {{ $nonoffice->nama_karyawan }}
+                                    {{ ucwords($nonoffice->nama_karyawan) }}
                                 </option>
                                 @endforeach
                             </select>

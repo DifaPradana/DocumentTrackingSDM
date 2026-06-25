@@ -317,7 +317,7 @@ new class extends Component
                                 <select wire:model="pengantar_user_id" class="form-select form-select-sm">
                                     <option value="">-- Pilih Pengantar --</option>
                                     @foreach ($pengantarUsers as $u)
-                                    <option value="{{ $u->user_id }}">{{ $u->nama_karyawan }}</option>
+                                    <option value="{{ $u->user_id }}">{{ ucwords($u->nama_karyawan) }}</option>
                                     @endforeach
                                 </select>
                                 @error('pengantar_user_id')
