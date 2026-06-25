@@ -14,29 +14,18 @@ new class extends Component
 
     public function with(): array
     {
-        $startOfMonth = now()->startOfMonth();
+        $statusCounts = Document::query()
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->whereIn('current_status', ['unprocessed', 'onprocess', 'selesai', 'revisi'])
+            ->selectRaw('current_status, COUNT(*) as total')
+            ->groupBy('current_status')
+            ->pluck('total', 'current_status');
 
         return [
-            'totalUnprocessed' => Document::query()
-                ->whereHas('creator')
-                ->where('current_status', 'belum diproses')
-                ->where('created_at', '>=', now()->subMonth())
-                ->count(),
-            'totalProcessed' => Document::query()
-                ->whereHas('creator')
-                ->where('current_status', 'diproses')
-                ->where('created_at', '>=', now()->subMonth())
-                ->count(),
-            'totalDone' => Document::query()
-                ->whereHas('creator')
-                ->where('current_status', 'selesai')
-                ->where('created_at', '>=', $startOfMonth)
-                ->count(),
-            'totalRevision' => Document::query()
-                ->whereHas('creator')
-                ->where('current_status', 'revisi')
-                ->where('created_at', '>=', $startOfMonth)
-                ->count(),
+            'totalUnprocessed' => $statusCounts['unprocessed'] ?? 0,
+            'totalProcessed'   => $statusCounts['onprocess']   ?? 0,
+            'totalDone'        => $statusCounts['selesai']     ?? 0,
+            'totalRevision'    => $statusCounts['revisi']      ?? 0,
         ];
     }
 };
@@ -48,7 +37,7 @@ new class extends Component
             <div class="card-body p-4">
                 <div class="d-flex align-items-center gap-2 mb-4">
                     <i class="ti ti-clipboard-list fs-5 text-muted"></i>
-                    <h5 class="card-title fw-semibold mb-0">Pengajuan Izin</h5>
+                    <h5 class="card-title fw-semibold mb-0">Pengajuan Dokumen</h5>
                 </div>
 
                 <div class="row g-3 mb-3">
@@ -79,26 +68,26 @@ new class extends Component
                         </a>
                     </div>
 
-                    {{-- Disetujui --}}
+                    {{-- Selesai --}}
                     <div class="col-md-3">
                         <a class="text-decoration-none d-block p-3 rounded-3 border border-success-subtle bg-success-subtle bg-opacity-25 stat-card"
                             style="border-left: 3px solid #3B6D11 !important;">
                             <i class="ti ti-circle-check text-success fs-5 mb-1 d-block"></i>
                             <div class="fw-semibold fs-4 text-success">{{ $totalDone }}</div>
-                            <div class="small text-muted">Disetujui</div>
+                            <div class="small text-muted">Selesai</div>
                             <span class="badge bg-success-subtle text-success-emphasis mt-1 small">
                                 <i class="ti ti-point-filled me-1" style="font-size:10px"></i>Bulan ini
                             </span>
                         </a>
                     </div>
 
-                    {{-- Ditolak --}}
+                    {{-- Revisi --}}
                     <div class="col-md-3">
                         <a class="text-decoration-none d-block p-3 rounded-3 border border-danger-subtle bg-danger-subtle bg-opacity-25 stat-card"
                             style="border-left: 3px solid #A32D2D !important;">
                             <i class="ti ti-circle-x text-danger fs-5 mb-1 d-block"></i>
                             <div class="fw-semibold fs-4 text-danger">{{ $totalRevision }}</div>
-                            <div class="small text-muted">Ditolak</div>
+                            <div class="small text-muted">Revisi</div>
                             <span class="badge bg-danger-subtle text-danger-emphasis mt-1 small">
                                 <i class="ti ti-point-filled me-1" style="font-size:10px"></i>Bulan ini
                             </span>
