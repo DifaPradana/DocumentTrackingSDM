@@ -47,8 +47,8 @@ new class extends Component
                             <td>
                                 <span class="fw-medium">{{ ucwords($doc->judul_dokumen) }}</span>
                             </td>
-                            <td>{{ $doc->creator->nama_karyawan ?? '-' }}</td>
-                            <td>{{ $doc->assignee->nama_karyawan ?? '-' }}</td>
+                            <td>{{ ucwords($doc->creator->nama_karyawan ?? '-') }}</td>
+                            <td>{{ ucwords($doc->assignee->nama_karyawan ?? '-') }}</td>
                             <td>
                                 @php
                                 $priorityMap = [
