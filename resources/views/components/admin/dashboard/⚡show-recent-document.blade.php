@@ -65,7 +65,7 @@ new class extends Component
                                 $statusMap = [
                                 'unprocessed' => ['bg-warning-subtle text-warning-emphasis', 'Unprocessed'],
                                 'onprocess' => ['bg-primary-subtle text-primary-emphasis', 'Onprocess'],
-                                'selesai' => ['bg-success-subtle text-success-emphasis', 'Selesai'],
+                                'done' => ['bg-success-subtle text-success-emphasis', 'Done'],
                                 'revisi' => ['bg-danger-subtle text-danger-emphasis', 'Revisi'],
                                 'hilang' => ['bg-dark-subtle text-dark-emphasis', 'Hilang'],
                                 ];

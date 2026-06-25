@@ -16,7 +16,7 @@ new class extends Component
     {
         $statusCounts = Document::query()
             ->where('created_at', '>=', now()->subDays(30)) // ganti ini
-            ->whereIn('current_status', ['unprocessed', 'onprocess', 'selesai', 'revisi'])
+            ->whereIn('current_status', ['unprocessed', 'onprocess', 'done', 'revisi'])
             ->selectRaw('current_status, COUNT(*) as total')
             ->groupBy('current_status')
             ->pluck('total', 'current_status');
@@ -24,7 +24,7 @@ new class extends Component
         return [
             'totalUnprocessed' => $statusCounts['unprocessed'] ?? 0,
             'totalProcessed'   => $statusCounts['onprocess']   ?? 0,
-            'totalDone'        => $statusCounts['selesai']     ?? 0,
+            'totalDone'        => $statusCounts['done']     ?? 0,
             'totalRevision'    => $statusCounts['revisi']      ?? 0,
         ];
     }
