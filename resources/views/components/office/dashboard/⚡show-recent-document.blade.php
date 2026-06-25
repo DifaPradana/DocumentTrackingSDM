@@ -9,7 +9,7 @@ new class extends Component
     {
         return [
             'recentDocuments' => Document::query()
-                ->whereHas('creator')
+                ->where('created_by', auth()->id())
                 ->with(['creator', 'assignee'])
                 ->latest()
                 ->take(10)
