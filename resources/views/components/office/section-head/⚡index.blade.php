@@ -130,7 +130,7 @@ new class extends Component
                                 </select>
                             </div>
                         </div>
-                        {{ $sectionHeads->links() }}
+                        {{ $sectionHeads->links('livewire::bootstrap') }}
                     </div>
                 </div>
                 {{-- </section> --}}

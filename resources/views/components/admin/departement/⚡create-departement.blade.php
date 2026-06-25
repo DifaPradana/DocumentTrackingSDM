@@ -24,7 +24,7 @@
             // dd($this->all());
 
             Departement::create([
-                'nama_departement' => strtolower($this->nama_departement),
+                'nama_departement' => $this->nama_departement,
             ]);
 
             $this->reset(['nama_departement']);

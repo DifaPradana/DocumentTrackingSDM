@@ -145,7 +145,7 @@ new class extends Component
                                 </select>
                             </div>
                         </div>
-                        {{ $roles->links() }}
+                        {{ $roles->links('livewire::bootstrap') }}
                     </div>
                 </div>
                 {{-- </section> --}}
