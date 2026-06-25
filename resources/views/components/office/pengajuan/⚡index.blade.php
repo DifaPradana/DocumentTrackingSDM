@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Document;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Jantinnerezo\LivewireAlert\Facades\LivewireAlert;
 use Livewire\Attributes\On;
@@ -24,12 +25,11 @@ new class extends Component
     {
         return [
             'recentDocuments' => Document::query()
-                ->whereHas('creator')
-                ->with(['creator', 'assignee'])
+                ->where('created_by', Auth::id())
+                ->with(['creator', 'assignee', 'pengantar'])
                 ->when(
                     $this->search,
-                    fn($q) =>
-                    $q->where('judul_dokumen', 'like', "%{$this->search}%")
+                    fn($q) => $q->where('judul_dokumen', 'like', "%{$this->search}%")
                 )
                 ->latest()
                 ->paginate($this->perPage),

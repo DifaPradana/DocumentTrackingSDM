@@ -41,6 +41,24 @@ class DatabaseSeeder extends Seeder
             'role_id' => 1,
         ]);
 
+        User::create([
+            'nama_karyawan' => 'difa pradana',
+            'password' => 'dips',
+            'role_id' => 2,
+        ]);
+
+        User::create([
+            'nama_karyawan' => 'vanda',
+            'password' => 'dips',
+            'role_id' => 3,
+        ]);
+
+        User::create([
+            'nama_karyawan' => 'anton',
+            'password' => 'dips',
+            'role_id' => 4,
+        ]);
+
         Departement::create([
             'nama_departement' => 'MA 1',
         ]);
