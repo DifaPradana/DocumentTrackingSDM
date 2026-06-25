@@ -48,8 +48,8 @@ new class extends Component
                             <td>
                                 <span class="fw-medium">{{ ucwords($doc->judul_dokumen) }}</span>
                             </td>
-                            <td>{{ $doc->creator->nama_karyawan ?? '-' }}</td>
-                            <td>{{ $doc->assignee->nama_karyawan ?? '-' }}</td>
+                            <td>{{ ucwords($doc->creator->nama_karyawan ?? '-') }}</td>
+                            <td>{{ ucwords($doc->assignee->nama_karyawan ?? '-') }}</td>
                             <td>
                                 @php
                                 $priorityMap = [
@@ -66,7 +66,7 @@ new class extends Component
                                 $statusMap = [
                                 'unprocessed' => ['bg-warning-subtle text-warning-emphasis', 'Unprocessed'],
                                 'onprocess' => ['bg-primary-subtle text-primary-emphasis', 'Onprocess'],
-                                'selesai' => ['bg-success-subtle text-success-emphasis', 'Selesai'],
+                                'done' => ['bg-success-subtle text-success-emphasis', 'Done'],
                                 'revisi' => ['bg-danger-subtle text-danger-emphasis', 'Revisi'],
                                 'hilang' => ['bg-dark-subtle text-dark-emphasis', 'Hilang'],
                                 ];
