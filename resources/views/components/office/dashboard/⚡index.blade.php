@@ -19,12 +19,12 @@ new class extends Component
         return [
             'totalUnprocessed' => Document::query()
                 ->whereHas('creator')
-                ->where('current_status', 'pending')
+                ->where('current_status', 'unprocessed')
                 ->where('created_at', '>=', now()->subMonth())
                 ->count(),
             'totalProcessed' => Document::query()
                 ->whereHas('creator')
-                ->where('current_status', 'waiting')
+                ->where('current_status', 'onprocess')
                 ->where('created_at', '>=', now()->subMonth())
                 ->count(),
             'totalDone' => Document::query()
