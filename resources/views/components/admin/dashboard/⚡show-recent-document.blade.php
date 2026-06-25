@@ -7,11 +7,8 @@ new class extends Component
 {
     public function with(): array
     {
-        $startOfMonth = now()->startOfMonth();
-
         return [
             'recentDocuments' => Document::query()
-                ->whereHas('creator')
                 ->with(['creator', 'assignee'])
                 ->latest()
                 ->take(10)
@@ -32,34 +29,32 @@ new class extends Component
 
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+                    <thead class="table-light text-center">
                         <tr>
-                            <th class="small text-muted fw-semibold">Kode</th>
                             <th class="small text-muted fw-semibold">Judul</th>
-                            <th class="small text-muted fw-semibold">Pengaju</th>
+                            <th class="small text-muted fw-semibold">PIC</th>
                             <th class="small text-muted fw-semibold">Ditugaskan ke</th>
                             <th class="small text-muted fw-semibold">Prioritas</th>
                             <th class="small text-muted fw-semibold">Status</th>
-                            <th class="small text-muted fw-semibold">Tanggal</th>
+                            <th class="small text-muted fw-semibold">Dibuat</th>
+                            <th class="small text-muted fw-semibold">Deadline</th>
+                            <th class="small text-muted fw-semibold">Photo</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="text-center">
                         @forelse ($recentDocuments as $doc)
                         <tr>
                             <td>
-                                <span class="font-monospace small text-muted">{{ $doc->tracking_code }}</span>
-                            </td>
-                            <td>
-                                <span class="fw-medium">{{ $doc->judul_dokumen }}</span>
+                                <span class="fw-medium">{{ ucwords($doc->judul_dokumen) }}</span>
                             </td>
                             <td>{{ $doc->creator->nama_karyawan ?? '-' }}</td>
                             <td>{{ $doc->assignee->nama_karyawan ?? '-' }}</td>
                             <td>
                                 @php
                                 $priorityMap = [
-                                'urgent' => ['bg-danger-subtle text-danger-emphasis', 'Urgent'],
-                                'penting' => ['bg-warning-subtle text-warning-emphasis', 'Penting'],
-                                'normal' => ['bg-secondary-subtle text-secondary-emphasis', 'Normal'],
+                                'tinggi' => ['bg-danger-subtle text-danger-emphasis', 'Tinggi'],
+                                'sedang' => ['bg-warning-subtle text-warning-emphasis', 'Sedang'],
+                                'rendah' => ['bg-secondary-subtle text-secondary-emphasis', 'Rendah'],
                                 ];
                                 [$priorityClass, $priorityLabel] = $priorityMap[$doc->priority] ?? ['bg-secondary-subtle text-secondary-emphasis', $doc->priority];
                                 @endphp
@@ -68,8 +63,8 @@ new class extends Component
                             <td>
                                 @php
                                 $statusMap = [
-                                'belum diproses' => ['bg-warning-subtle text-warning-emphasis', 'Belum Diproses'],
-                                'diproses' => ['bg-primary-subtle text-primary-emphasis', 'Diproses'],
+                                'unprocessed' => ['bg-warning-subtle text-warning-emphasis', 'Unprocessed'],
+                                'onprocess' => ['bg-primary-subtle text-primary-emphasis', 'Onprocess'],
                                 'selesai' => ['bg-success-subtle text-success-emphasis', 'Selesai'],
                                 'revisi' => ['bg-danger-subtle text-danger-emphasis', 'Revisi'],
                                 'hilang' => ['bg-dark-subtle text-dark-emphasis', 'Hilang'],
@@ -81,10 +76,89 @@ new class extends Component
                             <td>
                                 <span class="small text-muted">{{ $doc->created_at->format('d M Y') }}</span>
                             </td>
+                            <td>
+                                <span class="small text-danger fw-bold">
+                                    {{ $doc->deadline->format('d M Y') }}
+                                </span>
+                            </td>
+                            <td>
+                                <button
+                                    type="button"
+                                    class="btn btn-primary btn-sm"
+                                    onclick="showModal('modalDokumen{{ $doc->document_id }}')">
+                                    <i class="ti ti-eye"></i>
+                                    Lihat Dokumen
+                                </button>
+                            </td>
                         </tr>
+                        <div
+                            class="modal fade"
+                            id="modalDokumen{{ $doc->document_id }}"
+                            tabindex="-1"
+                            aria-hidden="true"
+                            wire:ignore.self>
+
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content">
+
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">
+                                            Dokumen {{ ucwords($doc->judul_dokumen) }}
+                                        </h5>
+
+                                        <button
+                                            type="button"
+                                            class="btn-close"
+                                            onclick="hideModal('modalDokumen{{ $doc->document_id }}')">
+                                        </button>
+                                    </div>
+
+                                    <div class="modal-body text-center">
+
+                                        @php
+                                        $ext = strtolower(pathinfo($doc->photo_start, PATHINFO_EXTENSION));
+                                        @endphp
+
+                                        @if(in_array($ext, ['jpg','jpeg','png','webp']))
+                                        <img
+                                            src="{{ asset('storage/'.$doc->photo_start) }}"
+                                            class="img-fluid rounded">
+                                        @elseif($ext === 'pdf')
+                                        <iframe
+                                            src="{{ asset('storage/'.$doc->photo_start) }}"
+                                            width="100%"
+                                            height="600">
+                                        </iframe>
+                                        @else
+                                        <a
+                                            href="{{ asset('storage/'.$doc->photo_start) }}"
+                                            target="_blank"
+                                            class="btn btn-primary">
+
+                                            Download Dokumen
+
+                                        </a>
+                                        @endif
+
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <button
+                                            type="button"
+                                            class="btn btn-secondary"
+                                            onclick="hideModal('modalDokumen{{ $doc->document_id }}')">
+
+                                            Tutup
+
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
+                            <td colspan="8" class="text-center text-muted py-4">
                                 <i class="ti ti-inbox fs-4 d-block mb-1"></i>
                                 Belum ada dokumen
                             </td>
@@ -93,7 +167,29 @@ new class extends Component
                     </tbody>
                 </table>
             </div>
-
         </div>
     </div>
+    <script>
+        function showModal(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            new bootstrap.Modal(el, {
+                backdrop: true
+            }).show();
+        }
+
+        function hideModal(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const modal = bootstrap.Modal.getInstance(el);
+            if (modal) modal.hide();
+        }
+
+        document.addEventListener('hidden.bs.modal', function() {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        });
+    </script>
 </div>
