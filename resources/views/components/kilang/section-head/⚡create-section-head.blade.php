@@ -214,8 +214,14 @@ new class extends Component
                 <button
                     type="button"
                     wire:click="daftarin"
+                    wire:loading.attr="disabled"
+                    wire:target="daftarin"
                     class="btn btn-primary">
-                    Simpan
+                    <span wire:loading.remove wire:target="daftarin">Simpan</span>
+                    <span wire:loading wire:target="daftarin">
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        Menyimpan...
+                    </span>
                 </button>
             </div>
 
