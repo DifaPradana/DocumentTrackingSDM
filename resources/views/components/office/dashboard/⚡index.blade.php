@@ -14,29 +14,19 @@ new class extends Component
 
     public function with(): array
     {
-        $startOfMonth = now()->startOfMonth();
+        $statusCounts = Document::query()
+            ->where('created_by', auth()->id())
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->whereIn('current_status', ['unprocessed', 'onprocess', 'selesai', 'revisi'])
+            ->selectRaw('current_status, COUNT(*) as total')
+            ->groupBy('current_status')
+            ->pluck('total', 'current_status');
 
         return [
-            'totalUnprocessed' => Document::query()
-                ->whereHas('creator')
-                ->where('current_status', 'unprocessed')
-                ->where('created_at', '>=', now()->subMonth())
-                ->count(),
-            'totalProcessed' => Document::query()
-                ->whereHas('creator')
-                ->where('current_status', 'onprocess')
-                ->where('created_at', '>=', now()->subMonth())
-                ->count(),
-            'totalDone' => Document::query()
-                ->whereHas('creator')
-                ->where('current_status', 'selesai')
-                ->where('created_at', '>=', $startOfMonth)
-                ->count(),
-            'totalRevision' => Document::query()
-                ->whereHas('creator')
-                ->where('current_status', 'revisi')
-                ->where('created_at', '>=', $startOfMonth)
-                ->count(),
+            'totalUnprocessed' => $statusCounts['unprocessed'] ?? 0,
+            'totalProcessed'   => $statusCounts['onprocess']   ?? 0,
+            'totalDone'        => $statusCounts['selesai']     ?? 0,
+            'totalRevision'    => $statusCounts['revisi']      ?? 0,
         ];
     }
 };
