@@ -27,6 +27,18 @@
                 </li>
                 <li class="nav-small-cap">
                     <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+                    <span class="hide-menu">Document Progress</span>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link" href="{{ route('progress.page') }}" aria-expanded="false">
+                        <span>
+                            <i class="ti ti-timeline"></i>
+                        </span>
+                        <span class="hide-menu">Progress</span>
+                    </a>
+                </li>
+                <li class="nav-small-cap">
+                    <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
                     <span class="hide-menu">Essential</span>
                 </li>
                 <li class="sidebar-item">

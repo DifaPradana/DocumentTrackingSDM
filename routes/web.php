@@ -11,6 +11,7 @@ Route::post('/logout', [AuthController::class, 'logoutWeb'])->name('logout');
 
 Route::group(['middleware' => ['auth', 'role:Admin'], 'prefix' => 'admin'], function () {
     Route::livewire('/dashboard', 'admin.dashboard.index')->name('dashboard.page');
+    Route::livewire('/document-progress', 'admin.progress.index')->name('progress.page');
     Route::livewire('/account', 'admin.account.index')->name('account.page');
     Route::livewire('/role', 'admin.role.index')->name('role.page');
     Route::livewire('/departement', 'admin.departement.index')->name('departement.page');
