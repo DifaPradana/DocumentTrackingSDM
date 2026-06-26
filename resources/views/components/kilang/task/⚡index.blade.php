@@ -157,22 +157,22 @@ new class extends Component
     public function simpanDoneModal()
     {
         $this->validate([
-            'photo_done'        => 'required|image|max:5120',
+            'photo_done'        => 'required|file|mimes:jpg,jpeg,png,pdf|max:10240',
             'pengantar_user_id' => 'required|exists:users,user_id',
         ], [
-            'photo_done.required'        => 'Foto bukti wajib diupload.',
-            'photo_done.image'           => 'File harus berupa gambar.',
-            'photo_done.max'             => 'Ukuran foto maksimal 5MB.',
+            'photo_done.required' => 'Foto/dokumen bukti wajib diupload.',
+            'photo_done.mimes'    => 'File harus berupa gambar (JPG, PNG) atau PDF.',
+            'photo_done.max'      => 'Ukuran file maksimal 10MB.',
             'pengantar_user_id.required' => 'Pengantar wajib dipilih.',
         ]);
 
+        $path = null;
+
         if ($this->photo_done) {
-
             $uploadedFile = $this->photo_done;
-
-            $filename = Str::uuid() . '.' . $uploadedFile->extension();
+            $filename     = Str::uuid() . '.' . $uploadedFile->extension();
             $relativePath = 'bukti-dokumen/' . $filename;
-            $fullPath = storage_path('app/public/' . $relativePath);
+            $fullPath     = storage_path('app/public/' . $relativePath);
 
             if (!is_dir(dirname($fullPath))) {
                 mkdir(dirname($fullPath), 0755, true);
@@ -181,23 +181,19 @@ new class extends Component
             $mimeType = $uploadedFile->getMimeType();
 
             if (str_starts_with($mimeType, 'image/')) {
-
                 $manager = ImageManager::usingDriver(Driver::class);
+                $image   = $manager->decodeSplFileInfo($uploadedFile);
 
-                $image = $manager->decodeSplFileInfo($uploadedFile);
-
-                // resize hanya jika lebih besar dari 1200px
                 if ($image->width() > 1200) {
                     $image->scale(width: 1200);
                 }
 
                 $image->save($fullPath, quality: 70);
             } else {
-
-                // PDF atau file lain langsung simpan
-                copy(
-                    $uploadedFile->getRealPath(),
-                    $fullPath
+                // PDF — copy langsung tanpa kompresi
+                \Storage::disk('public')->put(
+                    $relativePath,
+                    file_get_contents($uploadedFile->getRealPath())
                 );
             }
 
@@ -232,7 +228,7 @@ new class extends Component
 };
 ?>
 
-<div wire:poll.30s class="col-lg-12 d-flex align-items-stretch mt-4">
+<div wire:poll.15s class="col-lg-12 d-flex align-items-stretch mt-4">
     <div class="card w-100">
         <div class="card-body p-4">
             <div class="card-header bg-white border-0 py-3">
@@ -248,13 +244,14 @@ new class extends Component
                     <div class="flex">
                         <div class="relative w-full">
                             <input wire:model.live.debounce.300ms="search" type="text"
-                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 "
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2"
                                 placeholder="Search" required="">
                         </div>
                     </div>
                 </div>
             </div>
             <br>
+
             @if ($showDoneModal)
             <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.45); z-index:1055;">
                 <div class="modal-dialog modal-dialog-centered">
@@ -274,33 +271,50 @@ new class extends Component
 
                         <div class="modal-body px-4 py-3">
 
-                            {{-- Upload Foto Done --}}
+                            {{-- Upload Foto/PDF Done --}}
                             <div class="mb-3">
                                 <label class="form-label fw-semibold" style="font-size:12px">
-                                    <i class="ti ti-camera me-1"></i>Foto Bukti Selesai <span class="text-danger">*</span>
+                                    <i class="ti ti-paperclip me-1"></i>
+                                    Foto/PDF Bukti Selesai <span class="text-danger">*</span>
                                 </label>
+                                <p class="mb-1 text-muted" style="font-size:10px">
+                                    PNG, JPG, JPEG, PDF · Maks 10 MB
+                                </p>
+
                                 <label for="photoDoneInput"
                                     class="d-block border rounded-3 text-center p-3"
                                     style="cursor:pointer; border-style:dashed !important; border-color:#dee2e6; background:#f8f9fa;">
 
                                     @if ($photo_done)
+                                    @php $isPdf = $photo_done->getMimeType() === 'application/pdf'; @endphp
+
+                                    @if ($isPdf)
+                                    <i class="ti ti-file-type-pdf text-danger" style="font-size:2.5rem"></i>
+                                    <p class="text-success mb-0" style="font-size:11px">
+                                        <i class="ti ti-check me-1"></i>{{ $photo_done->getClientOriginalName() }}
+                                    </p>
+                                    @else
                                     <img src="{{ $photo_done->temporaryUrl() }}"
                                         class="img-fluid rounded-2 shadow-sm mb-1"
                                         style="max-height:150px; object-fit:cover;">
                                     <p class="text-success mb-0" style="font-size:11px">
                                         <i class="ti ti-check me-1"></i>{{ $photo_done->getClientOriginalName() }}
                                     </p>
+                                    @endif
                                     @else
                                     <i class="ti ti-cloud-upload text-muted" style="font-size:2rem"></i>
-                                    <p class="mb-0 text-muted mt-1" style="font-size:12px">Klik untuk pilih foto</p>
-                                    <p class="mb-0 text-muted" style="font-size:10px">PNG, JPG, JPEG · Maks 10 MB</p>
+                                    <p class="mb-0 text-muted mt-1" style="font-size:12px">Klik untuk pilih foto/PDF</p>
                                     @endif
 
-                                    <input id="photoDoneInput" type="file" wire:model="photo_done" accept="image/*" class="d-none">
+                                    <input id="photoDoneInput"
+                                        type="file"
+                                        wire:model="photo_done"
+                                        accept="image/*,application/pdf"
+                                        class="d-none">
                                 </label>
 
                                 <div wire:loading wire:target="photo_done" class="mt-1 text-primary" style="font-size:11px">
-                                    <i class="ti ti-loader-2 me-1"></i>Mengupload foto...
+                                    <i class="ti ti-loader-2 me-1"></i>Mengupload...
                                 </div>
                                 @error('photo_done')
                                 <div class="text-danger mt-1" style="font-size:11px">
@@ -347,6 +361,7 @@ new class extends Component
                 </div>
             </div>
             @endif
+
             <div class="row g-3">
                 {{-- Tabel --}}
                 <div class="{{ $selectedDocument ? 'col-lg-7' : 'col-12' }}">
@@ -414,7 +429,6 @@ new class extends Component
                                             $currentStep = $doc->documentRoute
                                             ->first(fn($route) => !in_array($route->status, ['none', 'approved']));
                                             @endphp
-
                                             <span class="fw-medium">
                                                 {{ $currentStep?->departement?->nama_departement ?? '-' }}
                                             </span>
@@ -456,12 +470,13 @@ new class extends Component
                             </tbody>
                         </table>
                     </div>
+
                     <div class="py-4 px-3">
-                        <div class="flex ">
+                        <div class="flex">
                             <div class="flex space-x-4 items-center mb-3">
                                 <label class="w-32 text-sm font-medium text-gray-900">Per Page</label>
                                 <select wire:model.live="perPage"
-                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 ">
+                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
                                     <option value="5">5</option>
                                     <option value="10">10</option>
                                     <option value="20">20</option>
@@ -479,7 +494,6 @@ new class extends Component
                 @php $steps = $selectedDocument->documentRoute; @endphp
                 <div class="col-lg-5">
                     <div class="card h-100 shadow-sm">
-                        <!-- Header Detail Progress -->
                         <div class="card-header d-flex justify-content-between align-items-start border-bottom py-3">
                             <div>
                                 <h6 class="mb-0 fw-semibold">{{ ucfirst($selectedDocument->judul_dokumen) }}</h6>
@@ -525,7 +539,7 @@ new class extends Component
                                 'unprocessed' => 'bg-warning-subtle text-warning-emphasis',
                                 default => 'bg-secondary-subtle text-secondary-emphasis',
                                 };
-                                $statusLabel = match($step->status) {
+                                $stepStatusLabel = match($step->status) {
                                 'approved' => 'Approved',
                                 'rejected' => 'Rejected',
                                 'revisi' => 'Revisi',
@@ -534,11 +548,9 @@ new class extends Component
                                 'none' => 'None',
                                 default => ucfirst($step->status),
                                 };
-
-                                @endphp
-                                @php
                                 $isLastStep = $step->urutan == $steps->max('urutan');
                                 @endphp
+
                                 <li wire:key="step-{{ $step->document_route_id }}" class="timeline-item d-flex position-relative overflow-hidden">
                                     <div class="timeline-badge-wrap d-flex flex-column align-items-center">
                                         <span class="timeline-badge border-2 bg-{{ $bulletColor }} flex-shrink-0 my-8"></span>
@@ -546,12 +558,13 @@ new class extends Component
                                         <span class="timeline-badge-border d-block flex-shrink-0"></span>
                                         @endif
                                     </div>
+
                                     <div class="timeline-desc fs-3 text-dark mt-n1 w-100">
                                         <div class="d-flex justify-content-between align-items-start gap-2">
                                             <div>
                                                 <span class="fw-semibold">{{ $step->departement->nama_departement }}</span>
                                                 <span class="badge {{ $badgeClass }} ms-1" style="font-size:10px">
-                                                    {{ $statusLabel }}
+                                                    {{ $stepStatusLabel }}
                                                 </span>
                                                 @if ($step->note)
                                                 <div class="text-muted mt-1" style="font-size:11px">
@@ -568,18 +581,16 @@ new class extends Component
                                             </div>
                                         </div>
 
-                                        {{-- Inline Edit Form --}}
                                         @php
                                         $hasPreviousRevisi = collect($steps)
                                         ->take($index)
-                                        ->contains(fn ($item) => $item->status === 'revisi');
+                                        ->contains(fn($item) => $item->status === 'revisi');
 
-                                        $canEdit =
-                                        in_array($step->status, ['unprocessed', 'onprocess']) &&
+                                        $canEdit = in_array($step->status, ['unprocessed', 'onprocess']) &&
                                         !$hasPreviousRevisi;
                                         @endphp
-                                        @if ($editingStepId == $step->document_route_id)
 
+                                        @if ($editingStepId == $step->document_route_id)
                                         <div class="mt-2 p-2 rounded border bg-light">
                                             <div class="mb-2">
                                                 <label class="form-label mb-1" style="font-size:11px; font-weight:600;">Status</label>
@@ -604,17 +615,16 @@ new class extends Component
                                                 <button
                                                     wire:click="batalEditStatus"
                                                     class="btn btn-sm btn-outline-secondary"
-                                                    style="font-size:11px; padding: 2px 8px;">Batal</button>
+                                                    style="font-size:11px; padding:2px 8px;">Batal</button>
                                                 <button
                                                     wire:click="simpanEditStatus"
                                                     class="btn btn-sm btn-primary"
-                                                    style="font-size:11px; padding: 2px 8px;">
+                                                    style="font-size:11px; padding:2px 8px;">
                                                     <i class="ti ti-check me-1"></i>Simpan
                                                 </button>
                                             </div>
                                         </div>
                                         @else
-
                                         @if ($canEdit)
                                         <button
                                             wire:click="bukaEditStatus({{ $step->document_route_id }})"
@@ -622,22 +632,6 @@ new class extends Component
                                             Edit
                                         </button>
                                         @endif
-                                        @endif
-                                        @if (
-                                        $editStatus === 'revisi' ||
-                                        ($editStatus === 'approved' && $isLastStep)
-                                        )
-                                        <div class="mb-3">
-                                            <label class="form-label">
-                                                Foto Dokumen
-                                            </label>
-                                            <input type="file" wire:model="photo_done" accept="image/*, .pdf" capture="user" class="form-control" id="photo_done">
-                                            <div wire:loading wire:target="photo_done" class="text-primary mt-2">
-                                                <span class="spinner-border spinner-border-sm"></span>
-                                                Uploading...
-                                            </div>
-                                        </div>
-                                        {{-- pilih pengantar --}}
                                         @endif
                                     </div>
                                 </li>
@@ -648,6 +642,7 @@ new class extends Component
                 </div>
                 @endif
             </div>
+
         </div>
     </div>
 </div>

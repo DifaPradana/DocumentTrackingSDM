@@ -108,6 +108,7 @@ new class extends Component
                             <th class="small text-muted fw-semibold">Status</th>
                             <th class="small text-muted fw-semibold">Dibuat</th>
                             <th class="small text-muted fw-semibold">Deadline</th>
+                            <th class="small text-muted fw-semibold">Dokumen</th>
                             <th class="small text-muted fw-semibold">Bukti Selesai</th>
                             <th class="small text-muted fw-semibold">Pengantar</th>
                             <th class="small text-muted fw-semibold">Action</th>
@@ -115,62 +116,6 @@ new class extends Component
                     </thead>
                     <tbody>
                         @forelse ($recentDocuments as $doc)
-                        {{-- Modal Dokumen --}}
-                        @if($doc->photo_done)
-                        <div
-                            class="modal fade"
-                            id="modalDokumen{{ $doc->document_id }}"
-                            tabindex="-1"
-                            aria-hidden="true"
-                            wire:ignore.self>
-
-                            <div class="modal-dialog modal-dialog-centered modal-lg">
-                                <div class="modal-content">
-
-                                    <div class="modal-body text-center">
-
-                                        @php
-                                        $ext = strtolower(pathinfo($doc->photo_done, PATHINFO_EXTENSION));
-                                        @endphp
-
-                                        @if(in_array($ext, ['jpg','jpeg','png','webp']))
-                                        <img
-                                            src="{{ asset('storage/'.$doc->photo_done) }}"
-                                            class="img-fluid rounded">
-                                        @elseif($ext === 'pdf')
-                                        <iframe
-                                            src="{{ asset('storage/'.$doc->photo_done) }}"
-                                            width="100%"
-                                            height="600">
-                                        </iframe>
-                                        @else
-                                        <a
-                                            href="{{ asset('storage/'.$doc->photo_done) }}"
-                                            target="_blank"
-                                            class="btn btn-primary">
-
-                                            Download Dokumen
-
-                                        </a>
-                                        @endif
-
-                                    </div>
-
-                                    <div class="modal-footer">
-                                        <button
-                                            type="button"
-                                            class="btn btn-secondary"
-                                            data-bs-dismiss="modal">
-
-                                            Tutup
-
-                                        </button>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                        @endif
                         <tr class="text-center align-middle">
                             <td>
                                 <span class="fw-medium">{{ ucwords($doc->judul_dokumen) }}</span>
@@ -209,12 +154,21 @@ new class extends Component
                                 <span class="small text-muted">{{ $doc->deadline->format('d M Y') }}</span>
                             </td>
                             <td>
+                                <button
+                                    type="button"
+                                    class="btn btn-primary btn-sm"
+                                    onclick="showModal('modalDokumenStart{{ $doc->document_id }}')">
+                                    <i class="ti ti-eye"></i>
+                                    Lihat Dokumen
+                                </button>
+                            </td>
+                            <td>
                                 @if($doc->photo_done)
                                 <div>
                                     <button
                                         type="button"
                                         class="btn btn-primary btn-sm"
-                                        data-bs-toggle="modal" data-bs-target="#modalDokumen{{ $doc->document_id }}">
+                                        data-bs-toggle="modal" data-bs-target="#modalDokumenDone{{ $doc->document_id }}">
                                         <i class="ti ti-eye"></i>
                                         Lihat Dokumen
                                     </button>
@@ -271,6 +225,71 @@ new class extends Component
                             </td>
                         </tr>
                         @endforelse
+
+                        @foreach ($recentDocuments as $doc)
+
+                        @if ($doc->photo_start)
+                        <div class="modal fade" id="modalDokumenStart{{ $doc->document_id }}"
+                            tabindex="-1" aria-hidden="true" wire:ignore.self>
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Dokumen — {{ ucwords($doc->judul_dokumen) }}</h5>
+                                        <button type="button" class="btn-close"
+                                            onclick="hideModal('modalDokumenStart{{ $doc->document_id }}')"></button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        @php $ext = strtolower(pathinfo($doc->photo_start, PATHINFO_EXTENSION)); @endphp
+                                        @if (in_array($ext, ['jpg','jpeg','png','webp']))
+                                        <img src="{{ asset('storage/'.$doc->photo_start) }}" class="img-fluid rounded">
+                                        @elseif ($ext === 'pdf')
+                                        <iframe src="{{ asset('storage/'.$doc->photo_start) }}" width="100%" height="600"></iframe>
+                                        @else
+                                        <a href="{{ asset('storage/'.$doc->photo_start) }}" target="_blank" class="btn btn-primary">
+                                            Download Dokumen
+                                        </a>
+                                        @endif
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            onclick="hideModal('modalDokumenStart{{ $doc->document_id }}')">Tutup</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                        @if ($doc->photo_done)
+                        <div class="modal fade" id="modalDokumenDone{{ $doc->document_id }}"
+                            tabindex="-1" aria-hidden="true" wire:ignore.self>
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Bukti Selesai — {{ ucwords($doc->judul_dokumen) }}</h5>
+                                        <button type="button" class="btn-close"
+                                            onclick="hideModal('modalDokumenDone{{ $doc->document_id }}')"></button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        @php $ext = strtolower(pathinfo($doc->photo_done, PATHINFO_EXTENSION)); @endphp
+                                        @if (in_array($ext, ['jpg','jpeg','png','webp']))
+                                        <img src="{{ asset('storage/'.$doc->photo_done) }}" class="img-fluid rounded">
+                                        @elseif ($ext === 'pdf')
+                                        <iframe src="{{ asset('storage/'.$doc->photo_done) }}" width="100%" height="600"></iframe>
+                                        @else
+                                        <a href="{{ asset('storage/'.$doc->photo_done) }}" target="_blank" class="btn btn-primary">
+                                            Download Dokumen
+                                        </a>
+                                        @endif
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            onclick="hideModal('modalDokumenDone{{ $doc->document_id }}')">Tutup</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -314,6 +333,21 @@ new class extends Component
                 modal?.hide();
             });
         });
+
+        function showModal(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            new bootstrap.Modal(el, {
+                backdrop: true
+            }).show();
+        }
+
+        function hideModal(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const modal = bootstrap.Modal.getInstance(el);
+            if (modal) modal.hide();
+        }
 
         // Fix overlay gelap: cleanup setiap kali modal done ditutup
         document.getElementById('editDocumentModal').addEventListener('hidden.bs.modal', () => {
