@@ -100,9 +100,9 @@ new class extends Component
         }
 
         $secHead->update([
-            'nama_section_head' => strtolower($this->nama_section_head),
+            'nama_section_head' => $this->nama_section_head,
             'departement_id'    => $this->departement_id,
-            'nama_pjs'          => !empty($this->nama_pjs) ? strtolower($this->nama_pjs) : null,
+            'nama_pjs'          => !empty($this->nama_pjs) ? $this->nama_pjs : null,
             'tanggal_mulai_pjs' => !empty($this->nama_pjs) ? $this->tanggal_mulai_pjs : null,
             'tanggal_akhir_pjs' => !empty($this->nama_pjs) ? $this->tanggal_akhir_pjs : null,
         ]);
