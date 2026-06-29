@@ -123,7 +123,7 @@ new class extends Component
                                         class="border px-4 py-3 text-center text-black">
                                         {{ ucwords($secHead->nama_section_head) }}
                                     </td>
-                                    <td class="border px-4 py-3 text-black text-center">{{ ucwords($secHead->nama_pjs ?? '-') }}
+                                    <td class="border px-4 py-3 text-black text-center">{{ $secHead->nama_pjs ?? '-' }}
                                     </td>
                                     <td class="border px-4 py-3 text-center text-black">
                                         {{ $secHead->tanggal_mulai_pjs?->format('d M Y') ?? '-' }}
@@ -131,7 +131,7 @@ new class extends Component
                                     <td class="border px-4 py-3 text-center text-black">
                                         {{ $secHead->tanggal_akhir_pjs?->format('d M Y') ?? '-' }}
                                     </td>
-                                    <td class="border px-4 py-3 text-black text-center">{{ ucwords($secHead->departement->nama_departement) }}
+                                    <td class="border px-4 py-3 text-black text-center">{{ $secHead->departement->nama_departement }}
                                     </td>
                                     <td class="px-4 py-3  text-center text-black">
                                         <button

@@ -107,7 +107,7 @@ new class extends Component
                                     <td class="border px-4 py-3 text-center text-black">
                                         {{ $secHead->tanggal_akhir_pjs?->format('d M Y') ?? '-' }}
                                     </td>
-                                    <td class="border px-4 py-3 text-black text-center">{{ ucwords($secHead->departement->nama_departement) }}
+                                    <td class="border px-4 py-3 text-black text-center">{{ $secHead->departement->nama_departement }}
                                     </td>
                                 </tr>
                                 @endforeach
