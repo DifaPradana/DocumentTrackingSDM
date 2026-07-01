@@ -19,7 +19,8 @@ class Document extends Model
         'deadline',
         'photo_start',
         'photo_done',
-        'pengantar_id'
+        'pengantar_id',
+        'start_pengantar_id'
     ];
 
     protected $casts = [
@@ -39,6 +40,11 @@ class Document extends Model
     public function pengantar()
     {
         return $this->belongsTo(User::class, 'pengantar_id', 'user_id');
+    }
+
+    public function startPengantar()
+    {
+        return $this->belongsTo(User::class, 'start_pengantar_id', 'user_id');
     }
 
     public function documentRoute()

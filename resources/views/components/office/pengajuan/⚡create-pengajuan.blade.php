@@ -20,12 +20,14 @@ new class extends Component
     public $showModal = false;
     public $karyawan_nonoffice = [];
     public $departement = [];
+    public $pengantar = [];
     public $selectedDepartements = [''];
     public $photo_start;
     public $judul_dokumen;
     public $priority;
     public $assigned_to;
     public $deadline;
+    public $pengantar_id;
 
     public function mount()
     {
@@ -36,6 +38,7 @@ new class extends Component
     {
         $this->karyawan_nonoffice = User::where('role_id', 3)->get();
         $this->departement = Departement::all();
+        $this->pengantar = User::where('role_id', 4)->get();
     }
 
     #[On('open-create-document')]
@@ -84,6 +87,7 @@ new class extends Component
             'photo_start.required'   => 'Harus upload photo/pdf dokumen, cover saja tidak apa-apa',
             'photo_start.mimes'      => 'Harus berupa photo/pdf',
             'photo_start.max'        => 'Ukuran maksimal 10 MB',
+            'pengantar_id.required'  => 'Pengantar harus diisi',
         ];
 
         $this->validate([
@@ -97,10 +101,10 @@ new class extends Component
                 }
             }],
             'deadline' => 'required',
-            'photo_start' => 'required|file|mimes:jpeg,jpg,png,pdf|max:10000'
+            'photo_start' => 'required|file|mimes:jpeg,jpg,png,pdf|max:10000',
+            'pengantar_id' => 'required'
 
         ], $message);
-
 
         if ($this->photo_start) {
 
@@ -148,6 +152,7 @@ new class extends Component
             'current_status' => 'unprocessed',
             'deadline'       => $this->deadline,
             'photo_start'    => $dokumenPath,
+            'start_pengantar_id' => $this->pengantar_id,
         ]);
 
         $departements = array_values(array_filter($this->selectedDepartements));
@@ -227,9 +232,9 @@ new class extends Component
                             @enderror
                         </div>
 
-                        {{-- Pengantar Dokumen --}}
+                        {{-- Router Dokumen --}}
                         <div class="mb-3">
-                            <label class="form-label">Pengantar Dokumen</label>
+                            <label class="form-label">Router Dokumen</label>
                             <select wire:model="assigned_to" class="form-select">
                                 <option value="">-- Pilih Karyawan --</option>
                                 @foreach ($karyawan_nonoffice as $nonoffice)
@@ -313,6 +318,22 @@ new class extends Component
                                 Uploading...
                             </div>
                             @error('photo_start')
+                            <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        {{-- Pengantar Dokumen dari kantor --}}
+                        <div class="mb-3">
+                            <label class="form-label">Pengantar Dokumen dari kantor</label>
+                            <select wire:model="pengantar_id" class="form-select">
+                                <option value="">-- Pilih Karyawan --</option>
+                                @foreach ($pengantar as $pengantars)
+                                <option value="{{ $pengantars->user_id }}">
+                                    {{ ucwords($pengantars->nama_karyawan) }}
+                                </option>
+                                @endforeach
+                            </select>
+                            @error('pengantar_id')
                             <small class="text-danger">{{ $message }}</small>
                             @enderror
                         </div>

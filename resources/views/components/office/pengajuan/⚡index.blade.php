@@ -26,7 +26,7 @@ new class extends Component
         return [
             'recentDocuments' => Document::query()
                 ->where('created_by', Auth::id())
-                ->with(['creator', 'assignee', 'pengantar'])
+                ->with(['creator', 'assignee', 'pengantar', 'startPengantar'])
                 ->when(
                     $this->search,
                     fn($q) => $q->where('judul_dokumen', 'like', "%{$this->search}%")
@@ -109,8 +109,9 @@ new class extends Component
                             <th class="small text-muted fw-semibold">Dibuat</th>
                             <th class="small text-muted fw-semibold">Deadline</th>
                             <th class="small text-muted fw-semibold">Dokumen</th>
+                            <th class="small text-muted fw-semibold">Pengantar Dari Kantor</th>
                             <th class="small text-muted fw-semibold">Bukti Selesai</th>
-                            <th class="small text-muted fw-semibold">Pengantar</th>
+                            <th class="small text-muted fw-semibold">Pengantar Dari Kilang</th>
                             <th class="small text-muted fw-semibold">Action</th>
                         </tr>
                     </thead>
@@ -162,6 +163,7 @@ new class extends Component
                                     Lihat Dokumen
                                 </button>
                             </td>
+                            <td>{{ ucwords($doc->startPengantar->nama_karyawan ?? '-') }}</td>
                             <td>
                                 @if($doc->photo_done)
                                 <div>
@@ -219,7 +221,7 @@ new class extends Component
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-4">
+                            <td colspan="11" class="text-center text-muted py-4">
                                 <i class="ti ti-inbox fs-4 d-block mb-1"></i>
                                 Belum ada dokumen
                             </td>

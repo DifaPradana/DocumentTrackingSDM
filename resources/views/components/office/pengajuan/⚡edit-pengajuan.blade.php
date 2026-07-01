@@ -16,9 +16,11 @@
         public $assigned_to;
         public $deadline;
         public $showModal = false;
+        public $pengantar_id;
 
         public $karyawan_nonoffice = [];
         public $departement = [];
+        public $pengantar = [];
         public $selectedDepartements = [''];
 
 
@@ -40,6 +42,7 @@
         {
             $this->karyawan_nonoffice = User::where('role_id', 3)->get();
             $this->departement = Departement::all();
+            $this->pengantar = User::where('role_id', 4)->get();
         }
 
         public function closeModal()
@@ -62,7 +65,10 @@
             $this->judul_dokumen = ucwords($document->judul_dokumen);
             $this->priority = $document->priority;
             $this->assigned_to = $document->assigned_to;
-            $this->deadline = $document->deadline;
+            $this->deadline = $document->deadline
+                ? \Carbon\Carbon::parse($document->deadline)->format('Y-m-d')
+                : null;
+            $this->pengantar_id = $document->start_pengantar_id;
 
             $routes = DocumentRoute::where('document_id', $document_id)
                 ->orderBy('urutan')
@@ -94,6 +100,7 @@
                 'priority.required'      => 'Priority wajib diisi',
                 'assigned_to.required'   => 'Wajib pilih karyawan',
                 'deadline.required'      => 'Deadline harus diisi',
+                'pengantar_id'     => 'Pengantar harus diisi'
             ];
 
             $this->validate([
@@ -107,6 +114,7 @@
                     }
                 }],
                 'deadline' => 'required',
+                'pengantar_id' => 'required'
             ], $message);
 
             $document = Document::find($this->document_id);
@@ -122,6 +130,7 @@
                 'priority'      => $this->priority,
                 'assigned_to'   => $this->assigned_to,
                 'deadline'      => $this->deadline,
+                'start_pengantar_id' => $this->pengantar_id,
             ]);
 
             // Filter departemen yang dipilih (buang yang kosong)
@@ -286,6 +295,22 @@
                                 <input type="date" wire:model="deadline"
                                     class="form-control" min="{{ now()->format('Y-m-d') }}">
                                 @error('deadline')
+                                <small class="text-danger">{{ $message }}</small>
+                                @enderror
+                            </div>
+
+                            {{-- Pengantar Dokumen dari kantor --}}
+                            <div class="mb-3">
+                                <label class="form-label">Pengantar Dokumen dari kantor</label>
+                                <select wire:model="pengantar_id" class="form-select">
+                                    <option value="">-- Pilih Karyawan --</option>
+                                    @foreach ($pengantar as $pengantars)
+                                    <option value="{{ $pengantars->user_id }}">
+                                        {{ ucwords($pengantars->nama_karyawan) }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                                @error('pengantar_id')
                                 <small class="text-danger">{{ $message }}</small>
                                 @enderror
                             </div>

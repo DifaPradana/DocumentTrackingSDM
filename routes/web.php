@@ -32,5 +32,6 @@ Route::group(['middleware' => ['auth', 'role:ADM Kilang'], 'prefix' => 'adm-kila
 
 Route::group(['middleware' => ['auth']], function () {
     Route::livewire('/profile', 'public.profile')->name('public.profile.page');
+    Route::livewire('/calendar', 'public.calendar')->name('public.calendar.page');
 });
 require __DIR__ . '/settings.php';

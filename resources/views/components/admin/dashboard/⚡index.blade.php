@@ -97,5 +97,6 @@ new class extends Component
             </div>
         </div>
     </div>
+    <livewire:public.dashboard.upcoming-events />
     <livewire:admin.dashboard.show-recent-document />
 </div>

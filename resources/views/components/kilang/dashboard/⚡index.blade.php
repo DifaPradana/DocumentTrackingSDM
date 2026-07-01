@@ -109,4 +109,5 @@ new class extends Component
         </div>
     </div>
     <livewire:kilang.dashboard.show-recent-unfinished />
+    <livewire:public.dashboard.upcoming-events />
 </div>
