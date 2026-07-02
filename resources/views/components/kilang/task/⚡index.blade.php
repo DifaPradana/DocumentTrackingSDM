@@ -87,9 +87,55 @@ new class extends Component
         $this->editNote = '';
     }
 
+    /**
+     * Dipanggil saat tidak ada lagi step yang perlu diaktifkan.
+     * Mengecek apakah masih ada step berstatus 'skip'; jika ada, dokumen
+     * diblokir dari selesai. Jika tidak, modal "Dokumen Selesai" dibuka.
+     * Mengembalikan true jika caller harus langsung return (baik karena
+     * diblokir maupun karena modal sudah dibuka).
+     */
+    private function bukaModalSelesaiAtauBlokirSkip($document, $step)
+    {
+        $hasSkippedStep = DocumentRoute::where('document_id', $step->document_id)
+            ->where('status', 'skip')
+            ->exists();
+
+        if ($hasSkippedStep) {
+            // Masih ada step yang di-skip -> dokumen tidak boleh selesai dulu.
+            $document->update([
+                'current_status' => 'approved'
+            ]);
+
+            session()->flash(
+                'warning',
+                'Dokumen belum bisa diselesaikan karena masih ada step yang di-skip. Selesaikan/edit dulu step yang di-skip tersebut.'
+            );
+
+            $this->batalEditStatus();
+
+            $docId = $this->selectedDocumentId;
+            $this->selectedDocumentId = null;
+            $this->selectedDocumentId = $docId;
+            return true;
+        }
+
+        $this->pendingDocumentId = $document->document_id;
+        $this->pendingStepId     = $step->document_route_id;
+
+        // Reset edit form dulu
+        $this->editingStepId = null;
+        $this->editStatus    = '';
+        $this->editNote      = '';
+
+        // Buka modal SETELAH reset, jangan pakai batalEditStatus() karena itu tutup modal
+        $this->showDoneModal = true;
+        return true;
+    }
+
     public function simpanEditStatus()
     {
         $step = DocumentRoute::findOrFail($this->editingStepId);
+        $originalStatus = $step->status;
 
         $dataUpdate = [
             'status' => $this->editStatus,
@@ -113,9 +159,56 @@ new class extends Component
         ]);
 
         if ($this->editStatus === 'approved') {
-            // Cari step selanjutnya
+            if ($originalStatus === 'skip') {
+                // Kasus khusus: step yang sebelumnya di-skip sekarang di-approve
+                // belakangan. Tidak perlu mengaktifkan step 'none' baru — cukup
+                // cek apakah sudah ada step lain yang statusnya 'unprocessed'
+                // (artinya alur memang sudah berjalan lebih dulu ke step itu).
+                $unprocessedStep = DocumentRoute::where('document_id', $step->document_id)
+                    ->where('status', 'unprocessed')
+                    ->orderBy('urutan')
+                    ->first();
+
+                if ($unprocessedStep) {
+                    $document->update([
+                        'current_status' => 'unprocessed'
+                    ]);
+                } else {
+                    if ($this->bukaModalSelesaiAtauBlokirSkip($document, $step)) {
+                        return;
+                    }
+                }
+            } else {
+                // Alur normal: cari step yang belum pernah tersentuh sama sekali
+                // (status 'none') dengan urutan paling kecil, lalu aktifkan.
+                $nextStep = DocumentRoute::where('document_id', $step->document_id)
+                    ->where('status', 'none')
+                    ->orderBy('urutan')
+                    ->first();
+
+                if ($nextStep) {
+                    $nextStep->update([
+                        'status' => 'unprocessed'
+                    ]);
+
+                    $document->update([
+                        'current_status' => 'unprocessed'
+                    ]);
+                } else {
+                    if ($this->bukaModalSelesaiAtauBlokirSkip($document, $step)) {
+                        return;
+                    }
+                }
+            }
+        } elseif ($this->editStatus === 'revisi') {
+            $document->update([
+                'current_status' => 'revisi'
+            ]);
+        } elseif ($this->editStatus === 'skip') {
+            // Step ini dilewati (skip), tapi tetap bisa diedit lagi nanti.
+            // Lanjutkan ke step 'none' berikutnya (urutan terkecil), sama seperti approved.
             $nextStep = DocumentRoute::where('document_id', $step->document_id)
-                ->where('urutan', '>', $step->urutan)
+                ->where('status', 'none')
                 ->orderBy('urutan')
                 ->first();
 
@@ -128,22 +221,13 @@ new class extends Component
                     'current_status' => 'unprocessed'
                 ]);
             } else {
-                $this->pendingDocumentId = $document->document_id;
-                $this->pendingStepId     = $step->document_route_id;
-
-                // Reset edit form dulu
-                $this->editingStepId = null;
-                $this->editStatus    = '';
-                $this->editNote      = '';
-
-                // Buka modal SETELAH reset, jangan pakai batalEditStatus() karena itu tutup modal
-                $this->showDoneModal = true;
-                return;
+                // Tidak ada lagi step 'none' yang tersisa (skip ini adalah step
+                // paling akhir yang masih perlu diaktifkan). Dokumen tidak
+                // otomatis selesai, statusnya cukup ditandai 'skip'.
+                $document->update([
+                    'current_status' => 'skip'
+                ]);
             }
-        } elseif ($this->editStatus === 'revisi') {
-            $document->update([
-                'current_status' => 'revisi'
-            ]);
         }
 
         $this->batalEditStatus();
@@ -200,6 +284,17 @@ new class extends Component
             $path = $relativePath;
         }
 
+        // Guard tambahan: pastikan tidak ada step yang masih di-skip
+        // sebelum benar-benar menandai dokumen sebagai 'done'.
+        $stillHasSkip = DocumentRoute::where('document_id', $this->pendingDocumentId)
+            ->where('status', 'skip')
+            ->exists();
+
+        if ($stillHasSkip) {
+            $this->addError('photo_done', 'Dokumen tidak bisa diselesaikan karena masih ada step yang di-skip.');
+            return;
+        }
+
         Document::findOrFail($this->pendingDocumentId)->update([
             'current_status' => 'done',
             'photo_done'     => $path,
@@ -251,6 +346,13 @@ new class extends Component
                 </div>
             </div>
             <br>
+
+            @if (session('warning'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="ti ti-alert-triangle me-1"></i>{{ session('warning') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            @endif
 
             @if ($showDoneModal)
             <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.45); z-index:1055;">
@@ -399,6 +501,7 @@ new class extends Component
                                 'onprocess' => ['bg-primary-subtle text-primary-emphasis', 'Onprocess'],
                                 'revisi' => ['bg-danger-subtle text-danger-emphasis', 'Revisi'],
                                 'approved' => ['bg-success-subtle text-success-emphasis', 'Approved'],
+                                'skip' => ['bg-info-subtle text-info-emphasis', 'Ada Step Di-skip'],
                                 'selesai' => ['bg-success-subtle text-success-emphasis', 'Selesai'],
                                 'hilang' => ['bg-dark-subtle text-dark-emphasis', 'Hilang'],
                                 ];
@@ -427,7 +530,7 @@ new class extends Component
                                         <td class="ps-3">
                                             @php
                                             $currentStep = $doc->documentRoute
-                                            ->first(fn($route) => !in_array($route->status, ['none', 'approved']));
+                                            ->first(fn($route) => !in_array($route->status, ['none', 'approved', 'skip']));
                                             @endphp
                                             <span class="fw-medium">
                                                 {{ $currentStep?->departement?->nama_departement ?? '-' }}
@@ -527,6 +630,7 @@ new class extends Component
                                 'onprocess' => 'primary',
                                 'none' => 'secondary',
                                 'unprocessed' => 'warning',
+                                'skip' => 'info',
                                 default => 'secondary',
                                 };
                                 $badgeClass = match($step->status) {
@@ -537,6 +641,7 @@ new class extends Component
                                 'onprocess' => 'bg-primary-subtle text-primary-emphasis',
                                 'none' => 'bg-secondary-subtle text-secondary-emphasis',
                                 'unprocessed' => 'bg-warning-subtle text-warning-emphasis',
+                                'skip' => 'bg-info-subtle text-info-emphasis',
                                 default => 'bg-secondary-subtle text-secondary-emphasis',
                                 };
                                 $stepStatusLabel = match($step->status) {
@@ -546,6 +651,7 @@ new class extends Component
                                 'hilang' => 'Hilang',
                                 'onprocess' => 'Onprocess',
                                 'none' => 'None',
+                                'skip' => 'Skip',
                                 default => ucfirst($step->status),
                                 };
                                 $isLastStep = $step->urutan == $steps->max('urutan');
@@ -586,7 +692,10 @@ new class extends Component
                                         ->take($index)
                                         ->contains(fn($item) => $item->status === 'revisi');
 
-                                        $canEdit = in_array($step->status, ['unprocessed', 'onprocess']) &&
+                                        // Step dengan status skip tetap bisa diedit kapan saja
+                                        // (selama tidak ada revisi tertunda sebelumnya),
+                                        // sehingga bisa "dikembalikan" statusnya nanti.
+                                        $canEdit = in_array($step->status, ['unprocessed', 'onprocess', 'skip']) &&
                                         !$hasPreviousRevisi;
                                         @endphp
 
@@ -599,6 +708,7 @@ new class extends Component
                                                     <option value="onprocess">Onprocess</option>
                                                     <option value="approved">Approved</option>
                                                     <option value="revisi">Revisi</option>
+                                                    <option value="skip">Skip</option>
                                                     <option value="hilang">Hilang</option>
                                                 </select>
                                             </div>
