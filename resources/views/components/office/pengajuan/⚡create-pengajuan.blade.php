@@ -145,7 +145,7 @@ new class extends Component
         }
 
         $document = Document::create([
-            'judul_dokumen'  => strtolower($this->judul_dokumen),
+            'judul_dokumen'  => $this->judul_dokumen,
             'priority'       => $this->priority,
             'assigned_to'    => $this->assigned_to,
             'created_by'     => auth()->id(),
