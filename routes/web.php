@@ -28,6 +28,7 @@ Route::group(['middleware' => ['auth', 'role:ADM Kilang'], 'prefix' => 'adm-kila
     Route::livewire('/dashboard', 'kilang.dashboard.index')->name('adm.dashboard.page');
     Route::livewire('/task', 'kilang.task.index')->name('adm.task.page');
     Route::livewire('/section-head', 'kilang.section-head.index')->name('adm.section-head.page');
+    Route::livewire('/history', 'kilang.history-document.index')->name('adm.history.page');
 });
 
 Route::group(['middleware' => ['auth']], function () {
