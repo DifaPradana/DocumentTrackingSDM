@@ -472,6 +472,7 @@ new class extends Component
                             <thead class="table-light text-center">
                                 <tr>
                                     <th class="ps-3 small text-muted fw-semibold">Judul Dokumen</th>
+                                    <th class="small text-muted fw-semibold">PIC</th>
                                     <th class="small text-muted fw-semibold">Prioritas</th>
                                     <th class="small text-muted fw-semibold">Status</th>
                                     <th class="small text-muted fw-semibold">Tujuan</th>
@@ -520,6 +521,9 @@ new class extends Component
 
                                         <td class="ps-3">
                                             <span class="fw-medium">{{ ucfirst($doc->judul_dokumen) }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-medium">{{ ucwords($doc->creator->nama_karyawan) }}</span>
                                         </td>
                                         <td>
                                             <span class="badge {{ $priorityClass }}">{{ $priorityLabel }}</span>
