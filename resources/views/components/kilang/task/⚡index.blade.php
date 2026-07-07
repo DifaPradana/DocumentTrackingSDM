@@ -604,157 +604,159 @@ new class extends Component
                 @if ($selectedDocument)
                 @php $steps = $selectedDocument->documentRoute; @endphp
                 <div class="col-lg-5">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-header d-flex justify-content-between align-items-start border-bottom py-3">
-                            <div>
-                                <h6 class="mb-0 fw-semibold">{{ ucfirst($selectedDocument->judul_dokumen) }}</h6>
-                                <div class="mt-1 d-flex gap-1 flex-wrap">
-                                    @php
-                                    [$pc, $pl] = $priorityMap[$selectedDocument->priority]
-                                    ?? ['bg-secondary-subtle text-secondary-emphasis', ucfirst($selectedDocument->priority)];
-                                    [$sc, $sl] = $statusMap[$selectedDocument->current_status]
-                                    ?? ['bg-secondary-subtle text-secondary-emphasis', ucfirst($selectedDocument->current_status)];
-                                    @endphp
-                                    <span class="badge {{ $pc }}" style="font-size:10px">Prioritas : {{ $pl }}</span>
-                                    <span class="badge {{ $sc }}" style="font-size:10px">{{ $sl }}</span>
-                                    @if ($selectedDocument->deadline)
-                                    <span class="badge bg-secondary-subtle text-secondary-emphasis" style="font-size:10px">
-                                        <i class="ti ti-calendar me-1"></i>{{ $selectedDocument->deadline->format('d M Y') }}
-                                    </span>
-                                    @endif
-                                </div>
-                            </div>
-                            <button wire:click="tutupProgress" class="btn-close ms-2 flex-shrink-0"></button>
-                        </div>
-
-                        <div class="card-body overflow-auto" style="max-height: 480px">
-                            <ul class="timeline-widget mb-0 position-relative mb-n5">
-                                @foreach ($steps as $index => $step)
-                                @php
-                                $bulletColor = match($step->status) {
-                                'approved' => 'success',
-                                'revisi' => 'danger',
-                                'hilang' => 'danger',
-                                'onprocess' => 'primary',
-                                'none' => 'secondary',
-                                'unprocessed' => 'warning',
-                                'skip' => 'info',
-                                default => 'secondary',
-                                };
-                                $badgeClass = match($step->status) {
-                                'approved' => 'bg-success-subtle text-success-emphasis',
-                                'rejected' => 'bg-danger-subtle text-danger-emphasis',
-                                'revisi' => 'bg-danger-subtle text-danger-emphasis',
-                                'hilang' => 'bg-dark-subtle text-dark-emphasis',
-                                'onprocess' => 'bg-primary-subtle text-primary-emphasis',
-                                'none' => 'bg-secondary-subtle text-secondary-emphasis',
-                                'unprocessed' => 'bg-warning-subtle text-warning-emphasis',
-                                'skip' => 'bg-info-subtle text-info-emphasis',
-                                default => 'bg-secondary-subtle text-secondary-emphasis',
-                                };
-                                $stepStatusLabel = match($step->status) {
-                                'approved' => 'Approved',
-                                'rejected' => 'Rejected',
-                                'revisi' => 'Revisi',
-                                'hilang' => 'Hilang',
-                                'onprocess' => 'Onprocess',
-                                'none' => 'None',
-                                'skip' => 'Skip',
-                                default => ucfirst($step->status),
-                                };
-                                $isLastStep = $step->urutan == $steps->max('urutan');
-                                @endphp
-
-                                <li wire:key="step-{{ $step->document_route_id }}" class="timeline-item d-flex position-relative overflow-hidden">
-                                    <div class="timeline-badge-wrap d-flex flex-column align-items-center">
-                                        <span class="timeline-badge border-2 bg-{{ $bulletColor }} flex-shrink-0 my-8"></span>
-                                        @if (!$loop->last)
-                                        <span class="timeline-badge-border d-block flex-shrink-0"></span>
-                                        @endif
-                                    </div>
-
-                                    <div class="timeline-desc fs-3 text-dark mt-n1 w-100">
-                                        <div class="d-flex justify-content-between align-items-start gap-2">
-                                            <div>
-                                                <span class="fw-semibold">{{ $step->departement->nama_departement }}</span>
-                                                <span class="badge {{ $badgeClass }} ms-1" style="font-size:10px">
-                                                    {{ $stepStatusLabel }}
-                                                </span>
-                                                @if ($step->note)
-                                                <div class="text-muted mt-1" style="font-size:11px">
-                                                    Note : "{{ $step->note }}"
-                                                </div>
-                                                @endif
-                                                @if ($step->revisi)
-                                                <div class="mt-1">
-                                                    <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size:10px">
-                                                        Revisi dari step {{ $step->revisi }}
-                                                    </span>
-                                                </div>
-                                                @endif
-                                            </div>
-                                        </div>
-
+                    <div class="position-sticky" style="top: 86px;">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header d-flex justify-content-between align-items-start border-bottom py-3">
+                                <div>
+                                    <h6 class="mb-0 fw-semibold">{{ ucfirst($selectedDocument->judul_dokumen) }}</h6>
+                                    <div class="mt-1 d-flex gap-1 flex-wrap">
                                         @php
-                                        $hasPreviousRevisi = collect($steps)
-                                        ->take($index)
-                                        ->contains(fn($item) => $item->status === 'revisi');
-
-                                        // Step dengan status skip tetap bisa diedit kapan saja
-                                        // (selama tidak ada revisi tertunda sebelumnya),
-                                        // sehingga bisa "dikembalikan" statusnya nanti.
-                                        $canEdit = in_array($step->status, ['unprocessed', 'onprocess', 'skip']) &&
-                                        !$hasPreviousRevisi;
+                                        [$pc, $pl] = $priorityMap[$selectedDocument->priority]
+                                        ?? ['bg-secondary-subtle text-secondary-emphasis', ucfirst($selectedDocument->priority)];
+                                        [$sc, $sl] = $statusMap[$selectedDocument->current_status]
+                                        ?? ['bg-secondary-subtle text-secondary-emphasis', ucfirst($selectedDocument->current_status)];
                                         @endphp
-
-                                        @if ($editingStepId == $step->document_route_id)
-                                        <div class="mt-2 p-2 rounded border bg-light">
-                                            <div class="mb-2">
-                                                <label class="form-label mb-1" style="font-size:11px; font-weight:600;">Status</label>
-                                                <select wire:model="editStatus" class="form-select form-select-sm">
-                                                    <option value="unprocessed">Unprocessed</option>
-                                                    <option value="onprocess">Onprocess</option>
-                                                    <option value="approved">Approved</option>
-                                                    <option value="revisi">Revisi</option>
-                                                    <option value="skip">Skip</option>
-                                                    <option value="hilang">Hilang</option>
-                                                </select>
-                                            </div>
-                                            <div class="mb-2">
-                                                <label class="form-label mb-1" style="font-size:11px; font-weight:600;">Catatan</label>
-                                                <textarea
-                                                    wire:model="editNote"
-                                                    class="form-control form-control-sm"
-                                                    rows="2"
-                                                    placeholder="Tambahkan catatan... (opsional)"
-                                                    style="font-size:11px"></textarea>
-                                            </div>
-                                            <div class="d-flex gap-1 justify-content-end">
-                                                <button
-                                                    wire:click="batalEditStatus"
-                                                    class="btn btn-sm btn-outline-secondary"
-                                                    style="font-size:11px; padding:2px 8px;">Batal</button>
-                                                <button
-                                                    wire:click="simpanEditStatus"
-                                                    class="btn btn-sm btn-primary"
-                                                    style="font-size:11px; padding:2px 8px;">
-                                                    <i class="ti ti-check me-1"></i>Simpan
-                                                </button>
-                                            </div>
-                                        </div>
-                                        @else
-                                        @if ($canEdit)
-                                        <button
-                                            wire:click="bukaEditStatus({{ $step->document_route_id }})"
-                                            class="btn btn-sm btn-outline-primary mt-2">
-                                            Edit
-                                        </button>
-                                        @endif
+                                        <span class="badge {{ $pc }}" style="font-size:10px">Prioritas : {{ $pl }}</span>
+                                        <span class="badge {{ $sc }}" style="font-size:10px">{{ $sl }}</span>
+                                        @if ($selectedDocument->deadline)
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis" style="font-size:10px">
+                                            <i class="ti ti-calendar me-1"></i>{{ $selectedDocument->deadline->format('d M Y') }}
+                                        </span>
                                         @endif
                                     </div>
-                                </li>
-                                @endforeach
-                            </ul>
+                                </div>
+                                <button wire:click="tutupProgress" class="btn-close ms-2 flex-shrink-0"></button>
+                            </div>
+
+                            <div class="card-body overflow-auto" style="max-height: 480px">
+                                <ul class="timeline-widget mb-0 position-relative mb-n5">
+                                    @foreach ($steps as $index => $step)
+                                    @php
+                                    $bulletColor = match($step->status) {
+                                    'approved' => 'success',
+                                    'revisi' => 'danger',
+                                    'hilang' => 'danger',
+                                    'onprocess' => 'primary',
+                                    'none' => 'secondary',
+                                    'unprocessed' => 'warning',
+                                    'skip' => 'info',
+                                    default => 'secondary',
+                                    };
+                                    $badgeClass = match($step->status) {
+                                    'approved' => 'bg-success-subtle text-success-emphasis',
+                                    'rejected' => 'bg-danger-subtle text-danger-emphasis',
+                                    'revisi' => 'bg-danger-subtle text-danger-emphasis',
+                                    'hilang' => 'bg-dark-subtle text-dark-emphasis',
+                                    'onprocess' => 'bg-primary-subtle text-primary-emphasis',
+                                    'none' => 'bg-secondary-subtle text-secondary-emphasis',
+                                    'unprocessed' => 'bg-warning-subtle text-warning-emphasis',
+                                    'skip' => 'bg-info-subtle text-info-emphasis',
+                                    default => 'bg-secondary-subtle text-secondary-emphasis',
+                                    };
+                                    $stepStatusLabel = match($step->status) {
+                                    'approved' => 'Approved',
+                                    'rejected' => 'Rejected',
+                                    'revisi' => 'Revisi',
+                                    'hilang' => 'Hilang',
+                                    'onprocess' => 'Onprocess',
+                                    'none' => 'None',
+                                    'skip' => 'Skip',
+                                    default => ucfirst($step->status),
+                                    };
+                                    $isLastStep = $step->urutan == $steps->max('urutan');
+                                    @endphp
+
+                                    <li wire:key="step-{{ $step->document_route_id }}" class="timeline-item d-flex position-relative overflow-hidden">
+                                        <div class="timeline-badge-wrap d-flex flex-column align-items-center">
+                                            <span class="timeline-badge border-2 bg-{{ $bulletColor }} flex-shrink-0 my-8"></span>
+                                            @if (!$loop->last)
+                                            <span class="timeline-badge-border d-block flex-shrink-0"></span>
+                                            @endif
+                                        </div>
+
+                                        <div class="timeline-desc fs-3 text-dark mt-n1 w-100">
+                                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                                <div>
+                                                    <span class="fw-semibold">{{ $step->departement->nama_departement }}</span>
+                                                    <span class="badge {{ $badgeClass }} ms-1" style="font-size:10px">
+                                                        {{ $stepStatusLabel }}
+                                                    </span>
+                                                    @if ($step->note)
+                                                    <div class="text-muted mt-1" style="font-size:11px">
+                                                        Note : "{{ $step->note }}"
+                                                    </div>
+                                                    @endif
+                                                    @if ($step->revisi)
+                                                    <div class="mt-1">
+                                                        <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size:10px">
+                                                            Revisi dari step {{ $step->revisi }}
+                                                        </span>
+                                                    </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            @php
+                                            $hasPreviousRevisi = collect($steps)
+                                            ->take($index)
+                                            ->contains(fn($item) => $item->status === 'revisi');
+
+                                            // Step dengan status skip tetap bisa diedit kapan saja
+                                            // (selama tidak ada revisi tertunda sebelumnya),
+                                            // sehingga bisa "dikembalikan" statusnya nanti.
+                                            $canEdit = in_array($step->status, ['unprocessed', 'onprocess', 'skip']) &&
+                                            !$hasPreviousRevisi;
+                                            @endphp
+
+                                            @if ($editingStepId == $step->document_route_id)
+                                            <div class="mt-2 p-2 rounded border bg-light">
+                                                <div class="mb-2">
+                                                    <label class="form-label mb-1" style="font-size:11px; font-weight:600;">Status</label>
+                                                    <select wire:model="editStatus" class="form-select form-select-sm">
+                                                        <option value="unprocessed">Unprocessed</option>
+                                                        <option value="onprocess">Onprocess</option>
+                                                        <option value="approved">Approved</option>
+                                                        <option value="revisi">Revisi</option>
+                                                        <option value="skip">Skip</option>
+                                                        <option value="hilang">Hilang</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="form-label mb-1" style="font-size:11px; font-weight:600;">Catatan</label>
+                                                    <textarea
+                                                        wire:model="editNote"
+                                                        class="form-control form-control-sm"
+                                                        rows="2"
+                                                        placeholder="Tambahkan catatan... (opsional)"
+                                                        style="font-size:11px"></textarea>
+                                                </div>
+                                                <div class="d-flex gap-1 justify-content-end">
+                                                    <button
+                                                        wire:click="batalEditStatus"
+                                                        class="btn btn-sm btn-outline-secondary"
+                                                        style="font-size:11px; padding:2px 8px;">Batal</button>
+                                                    <button
+                                                        wire:click="simpanEditStatus"
+                                                        class="btn btn-sm btn-primary"
+                                                        style="font-size:11px; padding:2px 8px;">
+                                                        <i class="ti ti-check me-1"></i>Simpan
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            @else
+                                            @if ($canEdit)
+                                            <button
+                                                wire:click="bukaEditStatus({{ $step->document_route_id }})"
+                                                class="btn btn-sm btn-outline-primary mt-2">
+                                                Edit
+                                            </button>
+                                            @endif
+                                            @endif
+                                        </div>
+                                    </li>
+                                    @endforeach
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
