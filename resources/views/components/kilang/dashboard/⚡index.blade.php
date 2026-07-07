@@ -36,8 +36,8 @@ new class extends Component
                 ->whereHas('assignee')
                 ->where('current_status', 'unprocessed')
                 ->where(function ($q) {
-                    $q->whereDate('deadline', '<', now()) // sudah lewat deadline
-                        ->orWhereDate('deadline', '<=', now()->addDays(3)); // deadline dalam 3 hari ke depan
+                    $q->whereDate('deadline', '<', now())
+                        ->orWhereDate('deadline', '<=', now()->addDays(3));
                 })
                 ->count(),
         ];
