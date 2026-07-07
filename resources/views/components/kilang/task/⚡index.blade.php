@@ -50,7 +50,7 @@ new class extends Component
                         $q->where('judul_dokumen', 'like', "%{$this->search}%")
                     )
                     ->where('current_status', '!=', 'done')
-                    ->latest()
+                    ->orderBy('deadline', 'asc')
                     ->paginate($this->perPage),
 
                 'selectedDocument' => $this->selectedDocumentId
@@ -550,12 +550,16 @@ new class extends Component
                                         </td>
                                         <td>
                                             @if ($doc->deadline)
-                                            <small class="{{ $isDeadlineSoon ? 'text-danger fw-semibold' : 'text-muted' }}">
-                                                {{ $isDeadlineSoon ? '⚠ ' . $doc->deadline->format('d M Y') : $doc->deadline->format('d M Y') }}
-                                            </small>
-                                            @else
-                                            <small class="text-muted">-</small>
-                                            @endif
+                                            @php
+                                            $isOverdue = $doc->deadline->isPast();
+                                            $isDeadlineSoon = !$isOverdue && now()->diffInDays($doc->deadline, false) < 3;
+                                                @endphp
+                                                <small class="{{ $isOverdue || $isDeadlineSoon ? 'text-danger fw-semibold' : 'text-muted' }}">
+                                                {{ $isOverdue || $isDeadlineSoon ? '⚠ ' . $doc->deadline->format('d M Y') : $doc->deadline->format('d M Y') }}
+                                                </small>
+                                                @else
+                                                <small class="text-muted">-</small>
+                                                @endif
                                         </td>
                                         <td>
                                             <i class="ti ti-chevron-right text-muted"></i>
