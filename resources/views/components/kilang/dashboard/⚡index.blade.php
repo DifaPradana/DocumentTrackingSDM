@@ -35,7 +35,10 @@ new class extends Component
             'totalNearDeadline' => Document::query()
                 ->whereHas('assignee')
                 ->where('current_status', 'unprocessed')
-                ->whereDate('deadline', '<=', now()->addDays(3))
+                ->where(function ($q) {
+                    $q->whereDate('deadline', '<', now()) // sudah lewat deadline
+                        ->orWhereDate('deadline', '<=', now()->addDays(3)); // deadline dalam 3 hari ke depan
+                })
                 ->count(),
         ];
     }
