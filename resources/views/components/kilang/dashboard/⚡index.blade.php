@@ -32,13 +32,16 @@ new class extends Component
                 ->where('current_status', 'done')
                 ->where('created_at', '>=', $startOfMonth)
                 ->count(),
+
             'totalOverdue' => Document::query()
                 ->whereHas('assignee')
+                ->whereIn('current_status', ['unprocessed', 'onprocess'])
                 ->whereDate('deadline', '<', now())
                 ->count(),
 
             'totalNearDeadline' => Document::query()
                 ->whereHas('assignee')
+                ->whereIn('current_status', ['unprocessed', 'onprocess'])
                 ->whereDate('deadline', '>=', now())
                 ->whereDate('deadline', '<=', now()->addDays(3))
                 ->count(),
