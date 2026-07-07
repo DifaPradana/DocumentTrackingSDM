@@ -192,7 +192,7 @@ new class extends Component
                 @if ($selectedDocument)
                 @php $steps = $selectedDocument->documentRoute->sortBy('urutan'); @endphp
                 <div class="col-lg-5">
-                    <div class="position-sticky" style="top: 40px;">
+                    <div class="position-sticky" style="top: 20px;">
                         <div class="card h-100 shadow-sm">
                             <div class="card-header d-flex justify-content-between align-items-start border-bottom py-3">
                                 <div>
