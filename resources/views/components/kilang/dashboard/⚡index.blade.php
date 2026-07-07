@@ -112,18 +112,6 @@ new class extends Component
                         </a>
                     </div>
 
-                    {{-- Overdue --}}
-                    <div class="col-md-3">
-                        <a class="text-decoration-none d-block p-3 rounded-3 border border-danger-subtle bg-danger-subtle bg-opacity-25 stat-card"
-                            style="border-left: 3px solid #A32D2D !important;">
-                            <i class="ti ti-circle-x text-danger fs-5 mb-1 d-block"></i>
-                            <div class="fw-semibold fs-4 text-danger">{{ $totalOverdue }}</div>
-                            <div class="small text-muted">Overdue</div>
-                            <span class="badge bg-danger-subtle text-danger-emphasis mt-1 small">
-                                <i class="ti ti-point-filled me-1" style="font-size:10px">Lebih dari tanggal deadline</i>
-                            </span>
-                        </a>
-                    </div>
                 </div>
             </div>
         </div>
