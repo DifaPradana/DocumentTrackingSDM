@@ -34,13 +34,11 @@ new class extends Component
                 ->count(),
             'totalOverdue' => Document::query()
                 ->whereHas('assignee')
-                ->where('current_status', 'unprocessed')
                 ->whereDate('deadline', '<', now())
                 ->count(),
 
             'totalNearDeadline' => Document::query()
                 ->whereHas('assignee')
-                ->where('current_status', 'unprocessed')
                 ->whereDate('deadline', '>=', now())
                 ->whereDate('deadline', '<=', now()->addDays(3))
                 ->count(),
@@ -58,10 +56,10 @@ new class extends Component
                     <h5 class="card-title fw-semibold mb-0">Pengajuan Dokumen</h5>
                 </div>
 
-                <div class="row g-3 mb-3">
+                <div class="row g-3 mb-3 row-cols-1 row-cols-sm-2 row-cols-md-5">
 
                     {{-- Belum diproses --}}
-                    <div class="col-md-3">
+                    <div class="col">
                         <a class="text-decoration-none d-block p-3 rounded-3 border border-warning-subtle bg-warning-subtle bg-opacity-25 stat-card"
                             style="border-left: 3px solid #E49B0F !important;">
                             <i class="ti ti-clock-hour-4 text-warning fs-5 mb-1 d-block"></i>
@@ -74,7 +72,7 @@ new class extends Component
                     </div>
 
                     {{-- Diproses --}}
-                    <div class="col-md-3">
+                    <div class="col">
                         <a class="text-decoration-none d-block p-3 rounded-3 border border-primary-subtle bg-primary-subtle bg-opacity-25 stat-card"
                             style="border-left: 3px solid #0c39db !important;">
                             <i class="ti ti-loader text-primary fs-5 mb-1 d-block"></i>
@@ -87,7 +85,7 @@ new class extends Component
                     </div>
 
                     {{-- Disetujui --}}
-                    <div class="col-md-3">
+                    <div class="col">
                         <a class="text-decoration-none d-block p-3 rounded-3 border border-success-subtle bg-success-subtle bg-opacity-25 stat-card"
                             style="border-left: 3px solid #3B6D11 !important;">
                             <i class="ti ti-circle-check text-success fs-5 mb-1 d-block"></i>
@@ -100,7 +98,7 @@ new class extends Component
                     </div>
 
                     {{-- Dekat Deadline --}}
-                    <div class="col-md-3">
+                    <div class="col">
                         <a class="text-decoration-none d-block p-3 rounded-3 border border-danger-subtle bg-danger-subtle bg-opacity-25 stat-card"
                             style="border-left: 3px solid #A32D2D !important;">
                             <i class="ti ti-circle-x text-danger fs-5 mb-1 d-block"></i>
@@ -112,6 +110,18 @@ new class extends Component
                         </a>
                     </div>
 
+                    {{-- Overdue --}}
+                    <div class="col">
+                        <a class="text-decoration-none d-block p-3 rounded-3 border border-dark-subtle bg-dark-subtle bg-opacity-25 stat-card"
+                            style="border-left: 3px solid #000000 !important;">
+                            <i class="ti ti-circle-x text-white fs-5 mb-1 d-block"></i>
+                            <div class="fw-semibold fs-4 text-white">{{ $totalOverdue }}</div>
+                            <div class="small text-white">Overdue</div>
+                            <span class="badge bg-dark-subtle text-white mt-1 small">
+                                <i class="ti ti-point-filled me-1" style="font-size:10px"></i>Lebih dari deadline
+                            </span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
