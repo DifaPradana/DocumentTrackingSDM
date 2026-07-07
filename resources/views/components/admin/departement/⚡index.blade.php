@@ -28,7 +28,6 @@ new class extends Component
         $this->resetPage();
     }
 
-    #[On('success')]
     public function render()
     {
         return $this->view([

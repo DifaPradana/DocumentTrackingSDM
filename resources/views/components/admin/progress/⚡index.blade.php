@@ -192,110 +192,112 @@ new class extends Component
                 @if ($selectedDocument)
                 @php $steps = $selectedDocument->documentRoute->sortBy('urutan'); @endphp
                 <div class="col-lg-5">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-header d-flex justify-content-between align-items-start border-bottom py-3">
-                            <div>
-                                <h6 class="mb-0 fw-semibold">{{ ucfirst($selectedDocument->judul_dokumen) }}</h6>
-                                <small class="text-muted">{{ $selectedDocument->tracking_code }}</small>
-                                <div class="mt-1 d-flex gap-1 flex-wrap">
-                                    @php
-                                    [$pc, $pl] = $priorityMap[$selectedDocument->priority]
-                                    ?? ['bg-secondary-subtle text-secondary-emphasis', ucfirst($selectedDocument->priority)];
-                                    [$sc, $sl] = $statusMap[$selectedDocument->current_status]
-                                    ?? ['bg-secondary-subtle text-secondary-emphasis', ucfirst($selectedDocument->current_status)];
-                                    @endphp
-                                    <span class="badge {{ $pc }}" style="font-size:10px">Prioritas : {{ $pl }}</span>
-                                    <span class="badge {{ $sc }}" style="font-size:10px">{{ $sl }}</span>
-                                    @if ($selectedDocument->deadline)
-                                    <span class="badge bg-secondary-subtle text-secondary-emphasis" style="font-size:10px">
-                                        <i class="ti ti-calendar me-1"></i>{{ $selectedDocument->deadline->format('d M Y') }}
-                                    </span>
-                                    @endif
-                                </div>
-                            </div>
-                            <button wire:click="tutupProgress" class="btn-close ms-2 flex-shrink-0"></button>
-                        </div>
-
-                        <div class="card-body overflow-auto" style="max-height: 480px">
-                            <ul class="timeline-widget mb-0 position-relative mb-n5">
-                                @foreach ($steps as $step)
-                                @php
-                                $bulletColor = match($step->status) {
-                                'approved' => 'success',
-                                'rejected' => 'danger',
-                                'revisi' => 'warning',
-                                'hilang' => 'dark',
-                                'onprocess' => 'primary',
-                                'unprocessed' => 'warning',
-                                'none' => 'secondary',
-                                default => 'secondary',
-                                };
-                                $badgeClass = match($step->status) {
-                                'approved' => 'bg-success-subtle text-success-emphasis',
-                                'rejected' => 'bg-danger-subtle text-danger-emphasis',
-                                'revisi' => 'bg-danger-subtle text-danger-emphasis',
-                                'hilang' => 'bg-dark-subtle text-dark-emphasis',
-                                'onprocess' => 'bg-primary-subtle text-primary-emphasis',
-                                'unprocessed' => 'bg-warning-subtle text-warning-emphasis',
-                                'none' => 'bg-secondary-subtle text-secondary-emphasis',
-                                default => 'bg-secondary-subtle text-secondary-emphasis',
-                                };
-                                $statusLabel = match($step->status) {
-                                'approved' => 'Approved',
-                                'rejected' => 'Rejected',
-                                'revisi' => 'Revisi',
-                                'hilang' => 'Hilang',
-                                'onprocess' => 'Onprocess',
-                                'none' => 'None',
-                                default => ucfirst($step->status),
-                                };
-                                $statusIcon = match($step->status) {
-                                'approved' => '✓',
-                                'rejected' => '✕',
-                                default => $step->urutan,
-                                };
-                                @endphp
-
-                                <li class="timeline-item d-flex position-relative overflow-hidden">
-                                    <div class="timeline-badge-wrap d-flex flex-column align-items-center">
-                                        <span class="timeline-badge border-2 bg-{{ $bulletColor }} flex-shrink-0 my-8"></span>
-                                        @if (!$loop->last)
-                                        <span class="timeline-badge-border d-block flex-shrink-0"></span>
-                                        @endif
-                                    </div>
-                                    <div class="timeline-desc fs-3 text-dark mt-n1">
-                                        <span class="fw-semibold">{{ $step->departement->nama_departement }}</span>
-                                        <span class="badge {{ $badgeClass }} ms-1" style="font-size:10px">
-                                            {{ $statusLabel }}
+                    <div class="position-sticky" style="top: 20px;">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-header d-flex justify-content-between align-items-start border-bottom py-3">
+                                <div>
+                                    <h6 class="mb-0 fw-semibold">{{ ucfirst($selectedDocument->judul_dokumen) }}</h6>
+                                    <small class="text-muted">{{ $selectedDocument->tracking_code }}</small>
+                                    <div class="mt-1 d-flex gap-1 flex-wrap">
+                                        @php
+                                        [$pc, $pl] = $priorityMap[$selectedDocument->priority]
+                                        ?? ['bg-secondary-subtle text-secondary-emphasis', ucfirst($selectedDocument->priority)];
+                                        [$sc, $sl] = $statusMap[$selectedDocument->current_status]
+                                        ?? ['bg-secondary-subtle text-secondary-emphasis', ucfirst($selectedDocument->current_status)];
+                                        @endphp
+                                        <span class="badge {{ $pc }}" style="font-size:10px">Prioritas : {{ $pl }}</span>
+                                        <span class="badge {{ $sc }}" style="font-size:10px">{{ $sl }}</span>
+                                        @if ($selectedDocument->deadline)
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis" style="font-size:10px">
+                                            <i class="ti ti-calendar me-1"></i>{{ $selectedDocument->deadline->format('d M Y') }}
                                         </span>
-                                        @if ($step->note)
-                                        <div class="text-muted mt-1" style="font-size:11px">
-                                            Note : "{{ $step->note }}"
-                                        </div>
-                                        @endif
-                                        @if ($step->kapan_onprocess)
-                                        <div class="text-muted mt-1" style="font-size:11px">
-                                            Onprocess at
-                                            {{ \Carbon\Carbon::parse($step->kapan_onprocess)->translatedFormat('H:i l, d F Y') }}
-                                        </div>
-                                        @endif
-                                        @if ($step->kapan_approved)
-                                        <div class="text-muted mt-1" style="font-size:11px">
-                                            Approved at
-                                            {{ \Carbon\Carbon::parse($step->kapan_approved)->translatedFormat('H:i l, d F Y') }}
-                                        </div>
-                                        @endif
-                                        @if ($step->revisi)
-                                        <div class="mt-1">
-                                            <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size:10px">
-                                                Revisi dari step {{ $step->revisi }}
-                                            </span>
-                                        </div>
                                         @endif
                                     </div>
-                                </li>
-                                @endforeach
-                            </ul>
+                                </div>
+                                <button wire:click="tutupProgress" class="btn-close ms-2 flex-shrink-0"></button>
+                            </div>
+
+                            <div class="card-body overflow-auto" style="max-height: 480px">
+                                <ul class="timeline-widget mb-0 position-relative mb-n5">
+                                    @foreach ($steps as $step)
+                                    @php
+                                    $bulletColor = match($step->status) {
+                                    'approved' => 'success',
+                                    'rejected' => 'danger',
+                                    'revisi' => 'warning',
+                                    'hilang' => 'dark',
+                                    'onprocess' => 'primary',
+                                    'unprocessed' => 'warning',
+                                    'none' => 'secondary',
+                                    default => 'secondary',
+                                    };
+                                    $badgeClass = match($step->status) {
+                                    'approved' => 'bg-success-subtle text-success-emphasis',
+                                    'rejected' => 'bg-danger-subtle text-danger-emphasis',
+                                    'revisi' => 'bg-danger-subtle text-danger-emphasis',
+                                    'hilang' => 'bg-dark-subtle text-dark-emphasis',
+                                    'onprocess' => 'bg-primary-subtle text-primary-emphasis',
+                                    'unprocessed' => 'bg-warning-subtle text-warning-emphasis',
+                                    'none' => 'bg-secondary-subtle text-secondary-emphasis',
+                                    default => 'bg-secondary-subtle text-secondary-emphasis',
+                                    };
+                                    $statusLabel = match($step->status) {
+                                    'approved' => 'Approved',
+                                    'rejected' => 'Rejected',
+                                    'revisi' => 'Revisi',
+                                    'hilang' => 'Hilang',
+                                    'onprocess' => 'Onprocess',
+                                    'none' => 'None',
+                                    default => ucfirst($step->status),
+                                    };
+                                    $statusIcon = match($step->status) {
+                                    'approved' => '✓',
+                                    'rejected' => '✕',
+                                    default => $step->urutan,
+                                    };
+                                    @endphp
+
+                                    <li class="timeline-item d-flex position-relative overflow-hidden">
+                                        <div class="timeline-badge-wrap d-flex flex-column align-items-center">
+                                            <span class="timeline-badge border-2 bg-{{ $bulletColor }} flex-shrink-0 my-8"></span>
+                                            @if (!$loop->last)
+                                            <span class="timeline-badge-border d-block flex-shrink-0"></span>
+                                            @endif
+                                        </div>
+                                        <div class="timeline-desc fs-3 text-dark mt-n1">
+                                            <span class="fw-semibold">{{ $step->departement->nama_departement }}</span>
+                                            <span class="badge {{ $badgeClass }} ms-1" style="font-size:10px">
+                                                {{ $statusLabel }}
+                                            </span>
+                                            @if ($step->note)
+                                            <div class="text-muted mt-1" style="font-size:11px">
+                                                Note : "{{ $step->note }}"
+                                            </div>
+                                            @endif
+                                            @if ($step->kapan_onprocess)
+                                            <div class="text-muted mt-1" style="font-size:11px">
+                                                Onprocess at
+                                                {{ \Carbon\Carbon::parse($step->kapan_onprocess)->translatedFormat('H:i l, d F Y') }}
+                                            </div>
+                                            @endif
+                                            @if ($step->kapan_approved)
+                                            <div class="text-muted mt-1" style="font-size:11px">
+                                                Approved at
+                                                {{ \Carbon\Carbon::parse($step->kapan_approved)->translatedFormat('H:i l, d F Y') }}
+                                            </div>
+                                            @endif
+                                            @if ($step->revisi)
+                                            <div class="mt-1">
+                                                <span class="badge bg-warning-subtle text-warning-emphasis" style="font-size:10px">
+                                                    Revisi dari step {{ $step->revisi }}
+                                                </span>
+                                            </div>
+                                            @endif
+                                        </div>
+                                    </li>
+                                    @endforeach
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
