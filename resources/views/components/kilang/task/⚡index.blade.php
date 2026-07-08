@@ -628,7 +628,7 @@ new class extends Component
                                 <button wire:click="tutupProgress" class="btn-close ms-2 flex-shrink-0"></button>
                             </div>
 
-                            <div class="card-body overflow-auto" style="max-height: 480px">
+                            <div class="card-body">
                                 <ul class="timeline-widget mb-0 position-relative mb-n5">
                                     @foreach ($steps as $index => $step)
                                     @php
