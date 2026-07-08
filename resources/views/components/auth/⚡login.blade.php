@@ -91,11 +91,28 @@ new class extends Component {
                             </div>
                             <div class="mb-4">
                                 <label for="password" class="form-label">Password</label>
-                                <input wire:model="password" type="password"
-                                    class="form-control @error('password') is-invalid @enderror"
-                                    id="password" placeholder="Password" />
+                                <div
+                                    x-data="{ showPassword: false }"
+                                    class="d-flex align-items-center border rounded @error('password') border-danger @enderror"
+                                    style="background-color: #fff;">
+                                    <input
+                                        wire:model="password"
+                                        :type="showPassword ? 'text' : 'password'"
+                                        class="form-control border-0 shadow-none"
+                                        id="password"
+                                        placeholder="Password" />
+
+                                    <button
+                                        type="button"
+                                        @click="showPassword = !showPassword"
+                                        class="btn border-0 bg-transparent d-flex align-items-center justify-content-center"
+                                        style="width: 42px; height: 100%;"
+                                        tabindex="-1">
+                                        <i class="ti" :class="showPassword ? 'ti-eye-off' : 'ti-eye'" style="font-size: 18px; color: #6c757d;"></i>
+                                    </button>
+                                </div>
                                 @error('password')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="text-danger mt-1" style="font-size: 0.875em;">{{ $message }}</div>
                                 @enderror
                             </div>
                             <button type="submit"
