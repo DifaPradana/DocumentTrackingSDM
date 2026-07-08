@@ -164,7 +164,7 @@
             $this->showModal = false;
             $this->resetExcept(['karyawan_nonoffice', 'departement']);
             $this->selectedDepartements = [''];
-            $this->dispatch('document-updated');
+            $this->dispatch('success');
 
             LivewireAlert::title('Berhasil Edit')
                 ->text('Berhasil edit dokumen')

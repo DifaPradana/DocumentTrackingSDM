@@ -42,7 +42,7 @@ new class extends Component
         $this->resetValidation();
     }
 
-    #[On('document-created')]
+    #[On('success')]
     public function refreshData() {}
 
     public function delete($document)

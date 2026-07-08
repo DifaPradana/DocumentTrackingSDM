@@ -179,7 +179,7 @@ new class extends Component
             ->position('top-end')
             ->show();
 
-        $this->dispatch('document-created')->to('office.pengajuan.index');
+        $this->dispatch('success');
     }
 };
 ?>

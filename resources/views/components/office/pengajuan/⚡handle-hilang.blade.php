@@ -81,7 +81,7 @@ new class extends Component
             ->timer(3000)
             ->show();
 
-        $this->dispatch('document-created');
+        $this->dispatch('success');
     }
 };
 ?>
