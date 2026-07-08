@@ -49,7 +49,7 @@ new class extends Component
                         fn($q) =>
                         $q->where('judul_dokumen', 'like', "%{$this->search}%")
                     )
-                    ->where('current_status', '!=', 'done')
+                    ->whereNotIn('current_status', ['done', 'revisi'])
                     ->orderBy('deadline', 'asc')
                     ->paginate($this->perPage),
 
